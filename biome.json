@@ -12,6 +12,7 @@
       "!node_modules",
       "!public",
       "!package-lock.json",
+      "!index.html",
       "!**/*.min.js",
       "!**/*.min.css"
     ]
