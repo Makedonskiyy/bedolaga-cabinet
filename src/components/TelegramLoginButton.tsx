@@ -15,12 +15,20 @@ import LegalConsentGate from './LegalConsentGate';
 
 interface TelegramLoginButtonProps {
   referralCode?: string;
+  hideAlternativeBotButton?: boolean;
+  manualDeepLink?: boolean;
+  onDeepLinkChange?: (active: boolean) => void;
 }
 
 const SCRIPT_LOAD_TIMEOUT_MS = 2000;
 const DEEPLINK_POLL_INTERVAL_MS = 2500;
 
-export default function TelegramLoginButton({ referralCode }: TelegramLoginButtonProps) {
+export default function TelegramLoginButton({
+  referralCode,
+  hideAlternativeBotButton = false,
+  manualDeepLink: controlledManualDeepLink,
+  onDeepLinkChange,
+}: TelegramLoginButtonProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -34,7 +42,16 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
   const [scriptFailed, setScriptFailed] = useState(false);
   // Lets the user opt into deep-link auth manually, without waiting for the
   // Telegram widget script to fail. See #<issue-number>.
-  const [manualDeepLink, setManualDeepLink] = useState(false);
+  const [internalManualDeepLink, setInternalManualDeepLink] = useState(false);
+  const manualDeepLink =
+    controlledManualDeepLink !== undefined ? controlledManualDeepLink : internalManualDeepLink;
+  const setManualDeepLink = useCallback(
+    (val: boolean) => {
+      setInternalManualDeepLink(val);
+      onDeepLinkChange?.(val);
+    },
+    [onDeepLinkChange],
+  );
   const showDeepLinkUI = scriptFailed || manualDeepLink;
   const loginWithTelegramOIDC = useAuthStore((s) => s.loginWithTelegramOIDC);
 
@@ -496,7 +513,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
     return (
       <div className="flex flex-col items-center space-y-5">
         {/* Info message */}
-        <p className="max-w-xs text-center text-xs text-dark-400">
+        <p className="max-w-xs text-center text-xs text-black/60 dark:text-white/60">
           {t(scriptFailed ? 'auth.telegramWidgetBlocked' : 'auth.deepLinkIntro')}
         </p>
 
@@ -504,10 +521,12 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
           <>
             {/* QR Code */}
             <div className="flex flex-col items-center space-y-2">
-              <div className="rounded-2xl bg-white p-4">
+              <div className="rounded-2xl bg-white p-4 shadow-sm border border-black/10 dark:border-white/10">
                 <QRCodeSVG value={deepLinkUrl} size={180} level="M" includeMargin={false} />
               </div>
-              <p className="text-[11px] text-dark-500">{t('auth.scanQrToLogin')}</p>
+              <p className="text-[11px] text-black/50 dark:text-white/50">
+                {t('auth.scanQrToLogin')}
+              </p>
             </div>
 
             {/* Open bot button */}
@@ -515,7 +534,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
               href={deepLinkUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#54a9eb] px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#4a96d2]"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#2AABEE] px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#229ED9]"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
@@ -525,7 +544,9 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
 
             {/* Manual command */}
             <div className="flex w-full max-w-xs flex-col items-center space-y-1.5">
-              <p className="text-[11px] text-dark-500">{t('auth.orSendCommand')}</p>
+              <p className="text-[11px] text-black/50 dark:text-white/50">
+                {t('auth.orSendCommand')}
+              </p>
               <button
                 type="button"
                 onClick={() => {
@@ -537,10 +558,12 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
                     })
                     .catch(() => {});
                 }}
-                className="group flex w-full items-center justify-between rounded-lg border border-dark-700 bg-dark-800/50 px-3 py-2 transition-colors hover:border-dark-600"
+                className="group flex w-full items-center justify-between rounded-xl border border-black/15 bg-black/[0.03] px-3.5 py-2.5 transition-colors hover:border-black/30 dark:border-white/15 dark:bg-white/[0.04] dark:hover:border-white/30"
               >
-                <code className="truncate text-xs text-dark-300">{startCommand}</code>
-                <span className="ml-2 flex-shrink-0 text-[10px] text-dark-500 transition-colors group-hover:text-dark-300">
+                <code className="truncate text-xs font-mono text-black/80 dark:text-white/80">
+                  {startCommand}
+                </code>
+                <span className="ml-2 flex-shrink-0 text-xs font-medium text-black/50 transition-colors group-hover:text-black dark:text-white/50 dark:hover:text-white">
                   {copied ? t('auth.commandCopied') : t('common.copy')}
                 </span>
               </button>
@@ -548,26 +571,26 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
 
             {/* Polling status */}
             {deepLinkPolling && (
-              <div className="flex items-center gap-2 text-xs text-dark-400">
-                <span className="h-3 w-3 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+              <div className="flex items-center gap-2 text-xs text-black/50 dark:text-white/50">
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
                 {t('auth.waitingForConfirmation')}
               </div>
             )}
           </>
         ) : deepLinkError ? (
           <div className="flex flex-col items-center space-y-2">
-            <p className="text-xs text-error-500">{deepLinkError}</p>
+            <p className="text-xs text-red-500">{deepLinkError}</p>
             <button
               type="button"
               onClick={startDeepLinkAuth}
-              className="text-sm text-accent-400 transition-colors hover:text-accent-300"
+              className="text-sm font-medium text-emerald-500 transition-colors hover:text-emerald-400"
             >
               {t('auth.tryAgain')}
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-xs text-dark-400">
-            <span className="h-3 w-3 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <div className="flex items-center gap-2 text-xs text-black/50 dark:text-white/50">
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
             {t('common.loading')}
           </div>
         )}
@@ -587,9 +610,9 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
               setDeepLinkError('');
               setManualDeepLink(false);
             }}
-            className="text-xs text-dark-400 underline decoration-dotted transition-colors hover:text-dark-300"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-black/60 transition-colors hover:text-black dark:text-white/60 dark:hover:text-white"
           >
-            {t('auth.backToWidget')}
+            ← {t('auth.backToWidget', 'Назад к способам входа')}
           </button>
         )}
       </div>
@@ -613,7 +636,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
               }
             }}
             disabled={oidcLoading || !scriptLoaded}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#54a9eb] px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#4a96d2] disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#2AABEE] px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#229ED9] disabled:opacity-50"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
@@ -631,41 +654,38 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
         </div>
       )}
 
-      {/* Referral deep link — only relevant for not-yet-registered users who
-          arrived via a referral link; the bot itself handles registering
-          them with the code attached. Hidden otherwise to avoid a third,
-          visually-identical "Telegram" entry point next to the two auth
-          methods below. */}
+      {/* Referral deep link */}
       {referralCode && (
         <a
           href={`https://t.me/${botUsername}?start=${encodeURIComponent(referralCode)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-telegram-blue inline-flex items-center text-xs hover:underline"
+          className="text-[#2AABEE] inline-flex items-center text-xs hover:underline"
         >
           {t('auth.orOpenInApp')}&nbsp;@{botUsername}
         </a>
       )}
 
-      <div className="flex w-full max-w-xs items-center gap-3">
-        <div className="h-px flex-1 bg-dark-700" />
-        <span className="text-[11px] text-dark-500">{t('common.or')}</span>
-        <div className="h-px flex-1 bg-dark-700" />
-      </div>
+      {!hideAlternativeBotButton && (
+        <>
+          <div className="flex w-full max-w-xs items-center gap-3">
+            <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+            <span className="text-[11px] text-black/40 dark:text-white/40">{t('common.or')}</span>
+            <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+          </div>
 
-      {/* Manual opt-in: same deep-link flow used as the anti-block fallback,
-          offered here as an explicit equal alternative to the widget for
-          users who'd rather confirm in the bot than type a phone number. */}
-      <button
-        type="button"
-        onClick={() => setManualDeepLink(true)}
-        className="inline-flex items-center gap-2 rounded-lg border border-dark-700 bg-dark-800/50 px-6 py-3 text-sm font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-800"
-      >
-        <svg className="h-5 w-5 text-telegram-blue" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
-        </svg>
-        {t('auth.loginWithBot')}
-      </button>
+          <button
+            type="button"
+            onClick={() => setManualDeepLink(true)}
+            className="inline-flex items-center gap-2 rounded-xl border border-black/15 bg-black/[0.02] px-6 py-3 text-sm font-medium text-black transition-colors hover:bg-black/[0.05] dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
+          >
+            <svg className="h-5 w-5 text-[#2AABEE]" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+            </svg>
+            {t('auth.loginWithBot')}
+          </button>
+        </>
+      )}
     </div>
   );
 }

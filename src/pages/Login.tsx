@@ -76,6 +76,7 @@ export default function Login() {
   const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
   const [forgotPasswordError, setForgotPasswordError] = useState('');
+  const [isTelegramQrOpen, setIsTelegramQrOpen] = useState(false);
 
   // Legal consent gate for new users (HTTP 428)
   const { data: legalConsent } = useQuery<LegalConsentConfig>({
@@ -604,47 +605,91 @@ export default function Login() {
                     </div>
                   ) : (
                     <div className="flex justify-center">
-                      <TelegramLoginButton referralCode={referralCode || undefined} />
+                      <TelegramLoginButton
+                        referralCode={referralCode || undefined}
+                        hideAlternativeBotButton={true}
+                        manualDeepLink={isTelegramQrOpen}
+                        onDeepLinkChange={setIsTelegramQrOpen}
+                      />
                     </div>
                   )}
                 </div>
 
-                {/* OAuth Buttons (Google, Apple, etc.) */}
-                {oauthProviders.length > 0 && (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {oauthProviders.map((provider) => (
+                {/* Show alternative auth options only when QR mode is not active */}
+                {!isTelegramQrOpen && (
+                  <>
+                    {/* Divider between Telegram Widget and Alternative Methods */}
+                    <div className="my-5 flex items-center gap-4 text-center">
+                      <div className="h-px flex-1 bg-black/15 dark:bg-white/10" />
+                      <span className="text-xs font-medium text-black/50 dark:text-white/40">
+                        {t('auth.orAlternative', 'или другие способы')}
+                      </span>
+                      <div className="h-px flex-1 bg-black/15 dark:bg-white/10" />
+                    </div>
+
+                    {/* Quick & OAuth Buttons (Google, Apple, Telegram Bot QR, etc.) */}
+                    <div
+                      className={`grid gap-3 ${
+                        oauthProviders.length === 0 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'
+                      }`}
+                    >
+                      {/* OAuth Providers (Google, etc.) */}
+                      {oauthProviders.map((provider, idx) => {
+                        const totalButtons = oauthProviders.length + 1; // +1 for Telegram Bot
+                        const isOddTotal = totalButtons % 2 !== 0;
+                        const isLastOAuth = idx === oauthProviders.length - 1;
+
+                        return (
+                          <button
+                            key={provider.name}
+                            type="button"
+                            onClick={() => handleOAuthLogin(provider.name)}
+                            disabled={oauthLoading !== null}
+                            className={`flex h-14 items-center justify-center gap-3 rounded-xl border border-black/15 bg-black/[0.02] px-4 text-sm sm:text-base font-medium text-black transition-all hover:bg-black/[0.05] active:scale-[0.99] dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08] disabled:opacity-50 ${
+                              isOddTotal && isLastOAuth ? 'sm:col-span-2' : ''
+                            }`}
+                          >
+                            {oauthLoading === provider.name ? (
+                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/40 border-t-black dark:border-white/40 dark:border-t-white" />
+                            ) : (
+                              <OAuthProviderIcon
+                                provider={provider.name}
+                                className="h-5 w-5 shrink-0"
+                              />
+                            )}
+                            <span className="truncate">
+                              {t('auth.continueWith', 'Войти через')} {provider.display_name}
+                            </span>
+                          </button>
+                        );
+                      })}
+
+                      {/* Telegram Bot / QR button */}
                       <button
-                        key={provider.name}
                         type="button"
-                        onClick={() => handleOAuthLogin(provider.name)}
-                        disabled={oauthLoading !== null}
-                        className="flex h-13 sm:h-14 items-center justify-center gap-3 rounded-xl border border-black/20 bg-white px-4 text-sm sm:text-base font-medium text-black transition-all hover:bg-black/[0.03] dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 disabled:opacity-50"
+                        onClick={() => setIsTelegramQrOpen(true)}
+                        className={`flex h-14 items-center justify-center gap-3 rounded-xl border border-black/15 bg-black/[0.02] px-4 text-sm sm:text-base font-medium text-black transition-all hover:bg-black/[0.05] active:scale-[0.99] dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08] ${
+                          oauthProviders.length === 0 ? 'sm:col-span-2' : ''
+                        }`}
                       >
-                        {oauthLoading === provider.name ? (
-                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/40 border-t-black dark:border-white/40 dark:border-t-white" />
-                        ) : (
-                          <OAuthProviderIcon
-                            provider={provider.name}
-                            className="h-5 w-5 shrink-0"
-                          />
-                        )}
+                        <OAuthProviderIcon provider="telegram" className="h-5 w-5 shrink-0" />
                         <span className="truncate">
-                          {t('auth.continueWith', 'Войти через')} {provider.display_name}
+                          {t('auth.loginWithBot', 'Войти через бота')}
                         </span>
                       </button>
-                    ))}
-                  </div>
-                )}
+                    </div>
 
-                {/* Divider */}
-                {isEmailAuthEnabled && (
-                  <div className="my-6 flex items-center gap-4 text-center">
-                    <div className="h-px flex-1 bg-black/15 dark:bg-white/10" />
-                    <span className="text-sm font-medium text-black/50 dark:text-white/40">
-                      {t('auth.or', 'или')}
-                    </span>
-                    <div className="h-px flex-1 bg-black/15 dark:bg-white/10" />
-                  </div>
+                    {/* Divider before Email */}
+                    {isEmailAuthEnabled && (
+                      <div className="my-6 flex items-center gap-4 text-center">
+                        <div className="h-px flex-1 bg-black/15 dark:bg-white/10" />
+                        <span className="text-sm font-medium text-black/50 dark:text-white/40">
+                          {t('auth.orEmail', 'или с помощью email')}
+                        </span>
+                        <div className="h-px flex-1 bg-black/15 dark:bg-white/10" />
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Email & Password Form */}
