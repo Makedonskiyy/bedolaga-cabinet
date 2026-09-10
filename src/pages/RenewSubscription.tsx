@@ -13,6 +13,7 @@ import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { WebBackButton } from '../components/WebBackButton';
 import { BEST_VALUE_BORDER, BestValueBadge } from '../components/subscription/BestValueBadge';
 import { PageSkeleton, Skeleton } from '../components/ui/skeleton';
+import { TextureButton } from '../components/ui/texture-button';
 
 export default function RenewSubscription() {
   const { subscriptionId } = useParams<{ subscriptionId: string }>();
@@ -254,15 +255,16 @@ export default function RenewSubscription() {
 
       {/* Renew button */}
       {selectedPeriod && (
-        <button
+        <TextureButton
+          size="lg"
           onClick={() => handleRenew(selectedPeriod)}
           disabled={renewMutation.isPending}
-          className="w-full rounded-2xl bg-accent-500 py-3.5 text-base font-semibold text-on-accent transition-colors hover:bg-accent-600 disabled:opacity-50"
+          className="w-full"
         >
           {renewMutation.isPending
             ? t('common.processing', 'Обработка...')
             : t('subscription.extend', 'Продлить подписку')}
-        </button>
+        </TextureButton>
       )}
     </div>
   );

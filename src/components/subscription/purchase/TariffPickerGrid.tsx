@@ -7,6 +7,7 @@ import { usePromoDiscount } from '../../../hooks/usePromoDiscount';
 import { dailyPriceQuote } from './dailyPrice';
 import { getGlassColors } from '../../../utils/glassTheme';
 import { ArrowDownIcon, DevicesIcon, RestartIcon } from '@/components/icons';
+import { TextureButton } from '@/components/ui/texture-button';
 import type { Tariff, Subscription, PurchaseOptions } from '../../../types';
 
 // ──────────────────────────────────────────────────────────────────
@@ -284,34 +285,26 @@ export function TariffPickerGrid({
                         {t('subscription.currentTariff')}
                       </div>
                     ) : (
-                      <button
-                        onClick={() => onSelectTariff(tariff)}
-                        className="btn-primary flex-1 py-2 text-sm"
-                      >
+                      <TextureButton onClick={() => onSelectTariff(tariff)} className="flex-1">
                         {t('subscription.extend')}
-                      </button>
+                      </TextureButton>
                     )
                   ) : isLegacySubscription ? (
-                    <button
-                      onClick={() => onSelectTariff(tariff)}
-                      className="btn-primary flex-1 py-2 text-sm"
-                    >
+                    <TextureButton onClick={() => onSelectTariff(tariff)} className="flex-1">
                       {t('subscription.tariff.selectForRenewal')}
-                    </button>
+                    </TextureButton>
                   ) : canSwitch ? (
-                    <button
+                    <TextureButton
+                      variant="secondary"
                       onClick={() => onSwitchTariff(tariff.id)}
-                      className="btn-secondary flex-1 py-2 text-sm"
+                      className="flex-1"
                     >
                       {t('subscription.switchTariff.switch')}
-                    </button>
+                    </TextureButton>
                   ) : (
-                    <button
-                      onClick={() => onSelectTariff(tariff)}
-                      className="btn-primary flex-1 py-2 text-sm"
-                    >
+                    <TextureButton onClick={() => onSelectTariff(tariff)} className="flex-1">
                       {t('subscription.purchase')}
-                    </button>
+                    </TextureButton>
                   )}
                 </div>
               </div>
