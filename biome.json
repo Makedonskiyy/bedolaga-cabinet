@@ -14,7 +14,8 @@
       "!package-lock.json",
       "!index.html",
       "!**/*.min.js",
-      "!**/*.min.css"
+      "!**/*.min.css",
+      "!src/components/admin/reachability/assets/*.json"
     ]
   },
   "formatter": {
