@@ -459,7 +459,7 @@ export default function Login() {
                 <p className="mb-4 text-sm font-semibold text-black dark:text-white">
                   {registeredEmail}
                 </p>
-                <p className="mb-6 text-xs text-black/40 dark:text-white/40">
+                <p className="mb-6 text-xs text-dark-400">
                   {t(
                     'auth.clickLinkToVerify',
                     'Click the link in the email to verify your account and log in.',
@@ -621,7 +621,7 @@ export default function Login() {
                     {/* Divider between Telegram Widget and Alternative Methods */}
                     <div className="my-5 flex items-center gap-4 text-center">
                       <div className="h-px flex-1 bg-black/15 dark:bg-white/10" />
-                      <span className="text-xs font-medium text-black/50 dark:text-white/40">
+                      <span className="text-xs font-medium text-dark-400">
                         {t('auth.orAlternative', 'или другие способы')}
                       </span>
                       <div className="h-px flex-1 bg-black/15 dark:bg-white/10" />
@@ -683,7 +683,7 @@ export default function Login() {
                     {isEmailAuthEnabled && (
                       <div className="my-6 flex items-center gap-4 text-center">
                         <div className="h-px flex-1 bg-black/15 dark:bg-white/10" />
-                        <span className="text-sm font-medium text-black/50 dark:text-white/40">
+                        <span className="text-sm font-medium text-dark-400">
                           {t('auth.orEmail', 'или с помощью email')}
                         </span>
                         <div className="h-px flex-1 bg-black/15 dark:bg-white/10" />
@@ -784,7 +784,7 @@ export default function Login() {
                     )}
 
                     {authMode === 'register' && (
-                      <p className="text-center text-xs text-black/50 dark:text-white/40">
+                      <p className="text-center text-xs text-dark-400">
                         {t(
                           'auth.verificationEmailNotice',
                           'After registration, a verification email will be sent to your address',
@@ -894,9 +894,9 @@ function FieldBox({
         placeholder={placeholder}
         required={required}
         autoComplete={autoComplete}
-        className="h-full min-w-0 flex-1 truncate bg-transparent text-black outline-none placeholder:text-black/35 dark:text-white dark:placeholder:text-white/35 text-base sm:text-lg"
+        className="h-full min-w-0 flex-1 truncate bg-transparent text-black outline-none placeholder:text-dark-400 dark:text-white dark:placeholder:text-dark-400 text-base sm:text-lg"
       />
-      <span className="shrink-0 text-xs sm:text-sm font-semibold uppercase tracking-wider text-black/50 dark:text-white/40 select-none">
+      <span className="shrink-0 text-xs sm:text-sm font-semibold uppercase tracking-wider text-dark-400 select-none">
         {label}
       </span>
     </label>

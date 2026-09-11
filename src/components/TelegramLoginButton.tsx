@@ -671,7 +671,7 @@ export default function TelegramLoginButton({
         <>
           <div className="flex w-full max-w-xs items-center gap-3">
             <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
-            <span className="text-[11px] text-black/40 dark:text-white/40">{t('common.or')}</span>
+            <span className="text-[11px] text-dark-400">{t('common.or')}</span>
             <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
           </div>
 
