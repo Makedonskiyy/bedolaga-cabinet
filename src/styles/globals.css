@@ -184,6 +184,7 @@
     --color-accent-800: 30, 64, 175;
     --color-accent-900: 30, 58, 138;
     --color-accent-950: 23, 37, 84;
+    --color-on-accent: 255, 255, 255;
 
     /* Success palette (RGB values) */
     --color-success-50: 240, 253, 244;
