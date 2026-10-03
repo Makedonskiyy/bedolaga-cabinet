@@ -11,9 +11,8 @@ import { getGlassColors } from '../../../utils/glassTheme';
 import { getErrorMessage, type PurchaseStep } from '../../../utils/subscriptionHelpers';
 import { CheckIcon } from '../../icons';
 import InsufficientBalancePrompt from '../../InsufficientBalancePrompt';
-import Twemoji from 'react-twemoji';
+import Twemoji from '@/lib/twemoji';
 import { Skeleton, SkeletonGroup } from '../../ui/skeleton';
-import { TextureButton } from '../../ui/texture-button';
 import type {
   ClassicPurchaseOptions,
   PeriodOption,
@@ -223,11 +222,11 @@ export function ClassicPurchaseWizard({
             : t('subscription.getSubscription')}
         </h2>
         {!showPurchaseForm && (
-          <TextureButton onClick={() => setShowPurchaseForm(true)}>
+          <button onClick={() => setShowPurchaseForm(true)} className="btn-primary">
             {subscription && !subscription.is_trial
               ? t('subscription.extend')
               : t('subscription.getSubscription')}
-          </TextureButton>
+          </button>
         )}
       </div>
 
@@ -581,20 +580,20 @@ export function ClassicPurchaseWizard({
                 {t('common.next')}
               </button>
             ) : (
-              <TextureButton
+              <button
                 onClick={() => purchaseMutation.mutate()}
                 disabled={purchaseMutation.isPending || previewLoading || !preview?.can_purchase}
-                className="flex-1"
+                className="btn-primary flex-1"
               >
                 {purchaseMutation.isPending ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                     {t('common.loading')}
                   </span>
                 ) : (
                   t('subscription.purchase')
                 )}
-              </TextureButton>
+              </button>
             )}
           </div>
 

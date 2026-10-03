@@ -14,7 +14,6 @@ import { pickBestValue } from '../../../utils/bestValue';
 import InsufficientBalancePrompt from '../../InsufficientBalancePrompt';
 import type { Tariff, TariffPeriod } from '../../../types';
 import { BestValueBadge, bestValueFrame } from '../BestValueBadge';
-import { TextureButton } from '@/components/ui/texture-button';
 
 // ──────────────────────────────────────────────────────────────────
 // TariffPurchaseForm
@@ -337,15 +336,14 @@ export function TariffPurchaseForm({
                   />
                 )}
 
-                <TextureButton
-                  size="lg"
+                <button
                   onClick={() => purchaseMutation.mutate()}
                   disabled={purchaseMutation.isPending}
-                  className="w-full"
+                  className="btn-primary w-full py-3"
                 >
                   {purchaseMutation.isPending ? (
                     <span className="flex items-center justify-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                       {t('common.loading')}
                     </span>
                   ) : (
@@ -353,7 +351,7 @@ export function TariffPurchaseForm({
                       price: formatPrice(dailyPrice),
                     })
                   )}
-                </TextureButton>
+                </button>
 
                 {sbpPurchaseButton}
                 {lavaPurchaseButton}
@@ -784,21 +782,20 @@ export function TariffPurchaseForm({
                       </div>
                     </div>
 
-                    <TextureButton
-                      size="lg"
+                    <button
                       onClick={() => purchaseMutation.mutate()}
                       disabled={purchaseMutation.isPending}
-                      className="w-full"
+                      className="btn-primary w-full py-3"
                     >
                       {purchaseMutation.isPending ? (
                         <span className="flex items-center justify-center gap-2">
-                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                           {t('common.loading')}
                         </span>
                       ) : (
                         t('subscription.purchase')
                       )}
-                    </TextureButton>
+                    </button>
 
                     {sbpPurchaseButton}
                     {lavaPurchaseButton}
