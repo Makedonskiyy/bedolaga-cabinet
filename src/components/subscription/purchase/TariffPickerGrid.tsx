@@ -9,7 +9,14 @@ import { getGlassColors } from '../../../utils/glassTheme';
 import { ArrowDownIcon, DevicesIcon, GiftIcon, RestartIcon } from '@/components/icons';
 import { TextureButton } from '@/components/ui/texture-button';
 import type { Tariff, Subscription, PurchaseOptions } from '../../../types';
-import { needsTariff } from '@/utils/legacySubscription';
+import { tariffAction, type TariffActionKind } from './tariffAction';
+
+/** Подпись кнопки для действий, которые ведут в один и тот же сценарий выбора. */
+const TARIFF_ACTION_LABEL: Record<Exclude<TariffActionKind, 'current-daily' | 'switch'>, string> = {
+  extend: 'subscription.extend',
+  moveToTariff: 'subscription.cta.moveToTariff',
+  purchase: 'subscription.purchase',
+};
 
 // ──────────────────────────────────────────────────────────────────
 // TariffPickerGrid
@@ -124,28 +131,16 @@ export function TariffPickerGrid({
           })
           .map((tariff) => {
             const isCurrentTariff = tariff.is_current || tariff.id === subscription?.tariff_id;
-            const isSubscriptionExpired =
-              isTariffsMode &&
-              purchaseOptions &&
-              'subscription_is_expired' in purchaseOptions &&
-              purchaseOptions.subscription_is_expired === true;
-            // Free (0₽) source tariff: the backend blocks the prorated switch
-            // (free_tariff_cannot_switch) — offer the purchase flow instead.
-            const isOnFreeTariff =
-              isTariffsMode &&
-              purchaseOptions &&
-              'subscription_on_free_tariff' in purchaseOptions &&
-              purchaseOptions.subscription_on_free_tariff === true;
-            const canSwitch =
-              !isMultiTariff &&
-              subscription &&
-              subscription.tariff_id &&
-              !isCurrentTariff &&
-              !subscription.is_trial &&
-              !isSubscriptionExpired &&
-              !isOnFreeTariff &&
-              (subscription.is_active || subscription.is_limited);
-            const isLegacySubscription = needsTariff(subscription);
+            // Ветвление кнопки живёт в tariffAction(): витрин стало две
+            // (обычная и простая), и расхождение в этом условии списало бы с
+            // части людей не ту сумму.
+            const action = tariffAction({
+              tariff,
+              subscription,
+              purchaseOptions,
+              isTariffsMode,
+              isMultiTariff,
+            });
 
             return (
               <div
@@ -267,21 +262,11 @@ export function TariffPickerGrid({
 
                 {/* Action Buttons */}
                 <div className="mt-4 flex gap-2">
-                  {isCurrentTariff ? (
-                    subscription?.is_daily ? (
-                      <div className="flex-1 py-2 text-center text-sm text-dark-500">
-                        {t('subscription.currentTariff')}
-                      </div>
-                    ) : (
-                      <TextureButton onClick={() => onSelectTariff(tariff)} className="flex-1">
-                        {t('subscription.extend')}
-                      </TextureButton>
-                    )
-                  ) : isLegacySubscription ? (
-                    <TextureButton onClick={() => onSelectTariff(tariff)} className="flex-1">
-                      {t('subscription.cta.moveToTariff')}
-                    </TextureButton>
-                  ) : canSwitch ? (
+                  {action === 'current-daily' ? (
+                    <div className="flex-1 py-2 text-center text-sm text-dark-500">
+                      {t('subscription.currentTariff')}
+                    </div>
+                  ) : action === 'switch' ? (
                     <TextureButton
                       variant="secondary"
                       onClick={() => onSwitchTariff(tariff.id)}
@@ -291,7 +276,7 @@ export function TariffPickerGrid({
                     </TextureButton>
                   ) : (
                     <TextureButton onClick={() => onSelectTariff(tariff)} className="flex-1">
-                      {t('subscription.purchase')}
+                      {t(TARIFF_ACTION_LABEL[action])}
                     </TextureButton>
                   )}
                 </div>
