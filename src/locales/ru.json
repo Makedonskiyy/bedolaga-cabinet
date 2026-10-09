@@ -1296,6 +1296,12 @@
       "closed": "Закрыт"
     },
     "attachImage": "Прикрепить изображение",
+    "recordVoice": "Голосовое сообщение",
+    "sendVoice": "Отправить",
+    "sendingVoice": "Отправка...",
+    "voiceNotSupported": "Запись голоса не поддерживается в этом браузере",
+    "voicePermissionDenied": "Доступ к микрофону запрещен в настройках браузера",
+    "voiceRecordError": "Не удалось получить доступ к микрофону",
     "downloadFile": "Скачать файл",
     "invalidFileType": "Неверный тип файла. Используйте JPEG, PNG, GIF или WebP.",
     "fileTooLarge": "Файл слишком большой. Максимальный размер 10МБ.",

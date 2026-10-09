@@ -1268,6 +1268,12 @@
       "closed": "Closed"
     },
     "attachImage": "Attach image",
+    "recordVoice": "Voice message",
+    "sendVoice": "Send",
+    "sendingVoice": "Sending...",
+    "voiceNotSupported": "Voice recording is not supported in this browser",
+    "voicePermissionDenied": "Microphone access is denied in browser settings",
+    "voiceRecordError": "Failed to access microphone",
     "downloadFile": "Download file",
     "invalidFileType": "Invalid file type. Use JPEG, PNG, GIF or WebP.",
     "fileTooLarge": "File is too large. Maximum size is 10MB.",

@@ -70,9 +70,17 @@ export const ticketsApi = {
   },
 
   // Upload media file for tickets
-  uploadMedia: async (file: File, mediaType: string = 'photo'): Promise<MediaUploadResponse> => {
+  uploadMedia: async (
+    file: File | Blob,
+    mediaType: string = 'photo',
+    filename?: string,
+  ): Promise<MediaUploadResponse> => {
     const formData = new FormData();
-    formData.append('file', file);
+    if (filename) {
+      formData.append('file', file, filename);
+    } else {
+      formData.append('file', file);
+    }
     formData.append('media_type', mediaType);
 
     const response = await apiClient.post<MediaUploadResponse>('/cabinet/media/upload', formData);

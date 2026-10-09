@@ -631,7 +631,7 @@ export interface ReferralRewardLevels {
 
 // Ticket types
 export interface TicketMediaItem {
-  type: 'photo' | 'video' | 'document';
+  type: 'photo' | 'video' | 'document' | 'voice';
   file_id: string;
   caption?: string | null;
   /** Signed, expiring download token (response only). */

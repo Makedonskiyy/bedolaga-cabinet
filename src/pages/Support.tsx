@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ticketsApi } from '../api/tickets';
 import { MessageMediaGrid } from '../components/tickets/MessageMediaGrid';
+import { VoiceRecorder } from '../components/tickets/VoiceRecorder';
 import { infoApi } from '../api/info';
 import { useAuthStore } from '../store/auth';
 import { logger } from '../utils/logger';
@@ -62,6 +63,7 @@ export default function Support() {
   // открытый тикет», 403 «поддержка выключена/пользователь заблокирован» и т.п.).
   // Формы create и reply взаимоисключающие, поэтому состояние одно на обе.
   const [formError, setFormError] = useState<string | null>(null);
+  const [isSendingVoice, setIsSendingVoice] = useState(false);
 
   // Media attachment states (multi-upload, up to 10)
   const [createAttachments, setCreateAttachments] = useState<MediaAttachment[]>([]);
@@ -208,6 +210,31 @@ export default function Support() {
       setFormError(getApiErrorMessage(error, t('support.errors.replyFailed')));
     },
   });
+
+  const handleSendVoice = async (audioBlob: Blob) => {
+    if (!selectedTicket) return;
+    setIsSendingVoice(true);
+    setFormError(null);
+    try {
+      const extension = audioBlob.type.includes('ogg') ? 'ogg' : 'webm';
+      const uploadResult = await ticketsApi.uploadMedia(audioBlob, 'voice', `voice.${extension}`);
+      const text = replyMessage.trim();
+      await ticketsApi.addMessage(selectedTicket.id, text, {
+        media_type: 'voice',
+        media_file_id: uploadResult.file_id,
+        media_caption: text || undefined,
+      });
+      setReplyMessage('');
+      clearReplyAttachments();
+      queryClient.invalidateQueries({ queryKey: ['ticket', selectedTicket.id] });
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    } catch (err) {
+      log.error('Failed to send voice message', err);
+      setFormError(getApiErrorMessage(err, t('support.errors.replyFailed')));
+    } finally {
+      setIsSendingVoice(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -603,17 +630,38 @@ export default function Support() {
                           {new Date(msg.created_at).toLocaleString(uiLocale())}
                         </span>
                       </div>
-                      {msg.message_text && (
-                        <div
-                          className="whitespace-pre-wrap break-words text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
-                          dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
-                        />
+                      {msg.media_type === 'voice' ? (
+                        <div>
+                          <div className="voice-message my-1.5 w-full max-w-md">
+                            <audio
+                              controls
+                              preload="metadata"
+                              src={ticketsApi.getMediaUrl(msg.media_file_id!, msg.media_token)}
+                              className="w-full max-w-full rounded-lg"
+                            />
+                          </div>
+                          {msg.message_text && (
+                            <div
+                              className="mt-2 whitespace-pre-wrap break-words text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
+                              dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <>
+                          {msg.message_text && (
+                            <div
+                              className="whitespace-pre-wrap break-words text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
+                              dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
+                            />
+                          )}
+                          {/* Display media if present */}
+                          <MessageMediaGrid
+                            message={msg}
+                            translateError={t('support.imageLoadFailed')}
+                          />
+                        </>
                       )}
-                      {/* Display media if present */}
-                      <MessageMediaGrid
-                        message={msg}
-                        translateError={t('support.imageLoadFailed')}
-                      />
                     </div>
                   ))}
                 </div>
@@ -671,26 +719,38 @@ export default function Support() {
                         }
                       />
                     </div>
-                    <div className="flex items-center justify-between">
-                      {replyAttachments.length < 10 && (
-                        <button
-                          type="button"
-                          onClick={() => replyFileInputRef.current?.click()}
-                          disabled={replyAttachments.some((a) => a.uploading)}
-                          className="flex items-center gap-2 text-sm text-dark-400 transition-colors hover:text-dark-200 disabled:opacity-50"
-                        >
-                          <ImageIcon />
-                          {t('support.attachImage')}{' '}
-                          {replyAttachments.length > 0 && `(${replyAttachments.length}/10)`}
-                        </button>
-                      )}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-4">
+                        {replyAttachments.length < 10 && (
+                          <button
+                            type="button"
+                            onClick={() => replyFileInputRef.current?.click()}
+                            disabled={replyAttachments.some((a) => a.uploading) || isSendingVoice}
+                            className="flex items-center gap-2 text-sm text-dark-400 transition-colors hover:text-dark-200 disabled:opacity-50"
+                          >
+                            <ImageIcon />
+                            {t('support.attachImage')}{' '}
+                            {replyAttachments.length > 0 && `(${replyAttachments.length}/10)`}
+                          </button>
+                        )}
+                        <VoiceRecorder
+                          onSendVoice={handleSendVoice}
+                          onError={(err) => setFormError(err)}
+                          disabled={
+                            replyAttachments.some((a) => a.uploading) ||
+                            replyMutation.isPending ||
+                            isSendingVoice
+                          }
+                        />
+                      </div>
 
                       <Button
                         type="submit"
                         disabled={
                           (!replyMessage.trim() &&
                             replyAttachments.filter((a) => a.fileId).length === 0) ||
-                          replyAttachments.some((a) => a.uploading)
+                          replyAttachments.some((a) => a.uploading) ||
+                          isSendingVoice
                         }
                         loading={replyMutation.isPending}
                       >

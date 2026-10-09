@@ -1141,6 +1141,12 @@
       "closed": "بسته"
     },
     "attachImage": "پیوست تصویر",
+    "recordVoice": "پیام صوتی",
+    "sendVoice": "ارسال",
+    "sendingVoice": "در حال ارسال...",
+    "voiceNotSupported": "ضبط صدا در این مرورگر پشتیبانی نمی‌شود",
+    "voicePermissionDenied": "دسترسی به میکروفون در تنظیمات مرورگر رد شده است",
+    "voiceRecordError": "دسترسی به میکروفون ناموفق بود",
     "downloadFile": "دانلود فایل",
     "invalidFileType": "نوع فایل نامعتبر. از JPEG، PNG، GIF یا WebP استفاده کنید.",
     "fileTooLarge": "فایل خیلی بزرگ است. حداکثر 10MB.",

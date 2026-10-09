@@ -25,6 +25,7 @@ import {
   PiLock,
   PiMagnifyingGlass,
   PiMegaphone,
+  PiMicrophone,
   PiMoon,
   PiPalette,
   PiPauseCircle,
@@ -116,6 +117,10 @@ export const PencilIcon = ({ className }: IconProps) => (
 
 export const TrashIcon = ({ className }: IconProps) => (
   <PiTrash className={cn('h-5 w-5', className)} />
+);
+
+export const MicrophoneIcon = ({ className }: IconProps) => (
+  <PiMicrophone className={cn('h-5 w-5', className)} />
 );
 
 export const UploadIcon = ({ className }: IconProps) => (

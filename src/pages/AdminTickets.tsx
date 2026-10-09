@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import logger from '../utils/logger';
 import { linkifyText } from '../utils/linkify';
 import { MessageMediaGrid } from '../components/tickets/MessageMediaGrid';
+import { VoiceRecorder } from '../components/tickets/VoiceRecorder';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { backTo } from '@/components/admin';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -84,6 +85,7 @@ export default function AdminTickets() {
   const [replyText, setReplyText] = useState('');
   const [isReplying, setIsReplying] = useState(false);
   const [replyError, setReplyError] = useState<string | null>(null);
+  const [isSendingVoice, setIsSendingVoice] = useState(false);
   const [page, setPage] = useState(1);
   const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -242,6 +244,34 @@ export default function AdminTickets() {
     queryClient.invalidateQueries({ queryKey: ['admin-ticket', selectedTicketId] });
     queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
     queryClient.invalidateQueries({ queryKey: ['admin-ticket-stats'] });
+  };
+
+  const handleSendVoice = async (audioBlob: Blob) => {
+    if (!selectedTicketId) return;
+    setIsSendingVoice(true);
+    setReplyError(null);
+    try {
+      const extension = audioBlob.type.includes('ogg') ? 'ogg' : 'webm';
+      const uploadResult = await ticketsApi.uploadMedia(audioBlob, 'voice', `voice.${extension}`);
+      const text = replyText.trim();
+      await adminApi.replyToTicket(selectedTicketId, text, {
+        media_type: 'voice',
+        media_file_id: uploadResult.file_id,
+        media_caption: text || undefined,
+      });
+      setReplyText('');
+      clearAttachments();
+      queryClient.invalidateQueries({ queryKey: ['admin-ticket', selectedTicketId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-ticket-stats'] });
+    } catch (err) {
+      logger.error('Ticket reply with voice failed:', err);
+      const msg =
+        err instanceof Error ? err.message : t('admin.tickets.replyFailed', 'Failed to send reply');
+      setReplyError(msg);
+    } finally {
+      setIsSendingVoice(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -559,13 +589,37 @@ export default function AdminTickets() {
                         {new Date(msg.created_at).toLocaleString()}
                       </span>
                     </div>
-                    {msg.message_text && (
-                      <p
-                        className="whitespace-pre-wrap break-words text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
-                        dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
-                      />
+                    {msg.media_type === 'voice' ? (
+                      <div>
+                        <div className="voice-message my-1.5 w-full max-w-md">
+                          <audio
+                            controls
+                            preload="metadata"
+                            src={ticketsApi.getMediaUrl(msg.media_file_id!, msg.media_token)}
+                            className="w-full max-w-full rounded-lg"
+                          />
+                        </div>
+                        {msg.message_text && (
+                          <p
+                            className="mt-2 whitespace-pre-wrap break-words text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
+                            dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        {msg.message_text && (
+                          <p
+                            className="whitespace-pre-wrap break-words text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
+                            dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
+                          />
+                        )}
+                        <MessageMediaGrid
+                          message={msg}
+                          translateError={t('support.imageLoadFailed')}
+                        />
+                      </>
                     )}
-                    <MessageMediaGrid message={msg} translateError={t('support.imageLoadFailed')} />
                   </div>
                 ))}
               </div>
@@ -636,21 +690,36 @@ export default function AdminTickets() {
                   )}
 
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={attachments.length >= 10 || attachments.some((a) => a.uploading)}
-                      className="flex items-center gap-2 rounded-lg border border-dark-700/50 px-3 py-2 text-sm text-dark-400 transition-colors hover:border-dark-600 hover:text-dark-200 disabled:opacity-50"
-                    >
-                      <PaperclipIcon className="h-4 w-4" />
-                      {t('admin.tickets.attachMedia')}{' '}
-                      {attachments.length > 0 && `(${attachments.length}/10)`}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={
+                          attachments.length >= 10 ||
+                          attachments.some((a) => a.uploading) ||
+                          isSendingVoice
+                        }
+                        className="flex items-center gap-2 rounded-lg border border-dark-700/50 px-3 py-2 text-sm text-dark-400 transition-colors hover:border-dark-600 hover:text-dark-200 disabled:opacity-50"
+                      >
+                        <PaperclipIcon className="h-4 w-4" />
+                        {t('admin.tickets.attachMedia')}{' '}
+                        {attachments.length > 0 && `(${attachments.length}/10)`}
+                      </button>
+                      <VoiceRecorder
+                        onSendVoice={handleSendVoice}
+                        onError={(err) => setReplyError(err)}
+                        disabled={
+                          attachments.some((a) => a.uploading) || isReplying || isSendingVoice
+                        }
+                        className="rounded-lg border border-dark-700/50 px-3 py-2"
+                      />
+                    </div>
                     <button
                       type="submit"
                       disabled={
                         (!replyText.trim() && attachments.filter((a) => a.fileId).length === 0) ||
                         isReplying ||
+                        isSendingVoice ||
                         attachments.some((a) => a.uploading || a.error)
                       }
                       className="btn-primary"

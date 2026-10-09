@@ -138,6 +138,19 @@ export function MessageMediaGrid({
       {/* Non-photo media rendered inline */}
       {otherItems.map((item) => {
         const mediaUrl = ticketsApi.getMediaUrl(item.file_id, item.token);
+        if (item.type === 'voice') {
+          return (
+            <div key={item.file_id} className="voice-message my-2 w-full max-w-md">
+              <audio
+                src={mediaUrl}
+                controls
+                preload="metadata"
+                className="w-full max-w-full rounded-lg"
+              />
+              {item.caption && <p className="mt-1 text-xs text-dark-400">{item.caption}</p>}
+            </div>
+          );
+        }
         if (item.type === 'video') {
           return (
             <div key={item.file_id}>
