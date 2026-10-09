@@ -18,6 +18,7 @@ import { hasLegacySubscription } from '../utils/legacySubscription';
 import TrialOfferCard from '../components/dashboard/TrialOfferCard';
 import ReminderCards from '../components/dashboard/ReminderCards';
 import StatsGrid from '../components/dashboard/StatsGrid';
+import DiscountPromoBanner from '../components/dashboard/DiscountPromoBanner';
 import { giftApi } from '../api/gift';
 import { promoApi } from '../api/promo';
 import PendingGiftCard from '../components/dashboard/PendingGiftCard';
@@ -441,6 +442,9 @@ export default function Dashboard() {
         earningsRubles={referralInfo?.available_balance_rubles || 0}
         refLoading={refLoading}
       />
+
+      {/* Discount Promo Banner */}
+      <DiscountPromoBanner />
 
       {/* Fortune Wheel Banner */}
       {wheelConfig?.is_enabled && (
