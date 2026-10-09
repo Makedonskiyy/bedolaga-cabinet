@@ -28,6 +28,63 @@ import {
 
 type ContinentFilter = 'all' | 'europe' | 'america' | 'asia';
 
+function isMatchContinent(c: DedicatedCountry, tab: ContinentFilter) {
+  if (tab === 'all') return true;
+  const cont = (c.continent || '').toLowerCase().trim();
+  const code = (c.code || '').toUpperCase().trim();
+
+  if (tab === 'america') {
+    return (
+      cont === 'america' ||
+      cont === 'americas' ||
+      cont.includes('americ') ||
+      cont === 'north_america' ||
+      cont === 'south_america' ||
+      cont === 'na' ||
+      cont === 'sa' ||
+      ['US', 'CA', 'BR', 'MX', 'AR', 'CL', 'CO'].includes(code)
+    );
+  }
+  if (tab === 'europe') {
+    return (
+      cont === 'europe' ||
+      cont.includes('europ') ||
+      cont === 'eu' ||
+      [
+        'DE',
+        'NL',
+        'FI',
+        'GB',
+        'FR',
+        'SE',
+        'CH',
+        'PL',
+        'ES',
+        'IT',
+        'AT',
+        'CZ',
+        'NO',
+        'EE',
+        'LV',
+        'LT',
+        'UA',
+        'RO',
+        'BG',
+      ].includes(code)
+    );
+  }
+  if (tab === 'asia') {
+    return (
+      cont === 'asia' ||
+      cont.includes('asia') ||
+      cont === 'as' ||
+      cont === 'me' ||
+      ['SG', 'JP', 'TR', 'AE', 'KR', 'HK', 'IN', 'KZ', 'IL'].includes(code)
+    );
+  }
+  return cont === tab;
+}
+
 export default function DedicatedServerOrder() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -79,8 +136,7 @@ export default function DedicatedServerOrder() {
 
   // Filtered countries
   const filteredCountries = useMemo(() => {
-    if (continent === 'all') return countries;
-    return countries.filter((c) => c.continent === continent);
+    return countries.filter((c) => isMatchContinent(c, continent));
   }, [countries, continent]);
 
   // Selected period discount
@@ -188,10 +244,10 @@ export default function DedicatedServerOrder() {
               type="button"
               onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
               aria-expanded={isCountryDropdownOpen}
-              className={`flex w-full items-center justify-between rounded-xl border p-3.5 text-left transition-all ${
+              className={`flex w-full items-center justify-between rounded-2xl border p-4 text-left backdrop-blur-2xl transition-all duration-200 ${
                 isCountryDropdownOpen
-                  ? 'border-accent-500 bg-accent-500/10 shadow-sm ring-1 ring-accent-500/30'
-                  : 'border-dark-700/60 bg-dark-800/40 hover:border-dark-600'
+                  ? 'border-accent-500/80 bg-accent-500/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)]'
+                  : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
@@ -206,7 +262,7 @@ export default function DedicatedServerOrder() {
                     >
                       {selectedCountry?.name || selectedCountryCode}
                     </span>
-                    <span className="rounded bg-dark-700/70 px-1.5 py-0.5 text-xs text-dark-300">
+                    <span className="rounded-md border border-white/10 bg-white/[0.05] px-1.5 py-0.5 text-xs text-dark-300">
                       {selectedCountryCode}
                     </span>
                   </div>
@@ -232,15 +288,14 @@ export default function DedicatedServerOrder() {
             {/* Dropdown Menu */}
             {isCountryDropdownOpen && (
               <div
-                className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl"
+                className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-white/10 shadow-2xl backdrop-blur-2xl"
                 style={{
-                  background: isDark ? 'rgba(23, 23, 28, 0.98)' : 'rgba(255, 255, 255, 0.98)',
-                  borderColor: g.cardBorder,
+                  background: isDark ? 'rgba(20, 20, 26, 0.96)' : 'rgba(255, 255, 255, 0.96)',
                 }}
               >
                 {/* Continent filter tabs inside dropdown */}
-                <div className="border-b border-dark-700/50 p-2.5">
-                  <div className="flex rounded-lg border border-dark-700/60 bg-dark-900/60 p-0.5 text-xs">
+                <div className="border-b border-white/[0.08] p-2.5">
+                  <div className="flex rounded-xl border border-white/[0.06] bg-black/40 p-1 text-xs backdrop-blur-md gap-1">
                     {(
                       [
                         { id: 'all', label: t('dedicated.continents.all', 'Все') },
@@ -256,10 +311,10 @@ export default function DedicatedServerOrder() {
                           e.stopPropagation();
                           setContinent(tab.id);
                         }}
-                        className={`flex-1 rounded-md py-1 font-medium text-center transition-colors ${
+                        className={`flex-1 rounded-lg py-1.5 font-medium text-center transition-all ${
                           continent === tab.id
-                            ? 'bg-accent-500 text-on-accent'
-                            : 'text-dark-400 hover:text-dark-200'
+                            ? 'bg-accent-500 text-black font-semibold'
+                            : 'text-dark-400 hover:text-white'
                         }`}
                       >
                         {tab.label}
@@ -269,7 +324,7 @@ export default function DedicatedServerOrder() {
                 </div>
 
                 {/* Country items */}
-                <div className="max-h-60 overflow-y-auto divide-y divide-dark-700/20 p-1.5">
+                <div className="max-h-60 overflow-y-auto divide-y divide-white/[0.04] p-1.5">
                   {filteredCountries.map((c: DedicatedCountry) => {
                     const isSelected = selectedCountryCode === c.code;
                     return (
@@ -280,10 +335,10 @@ export default function DedicatedServerOrder() {
                           setSelectedCountryCode(c.code);
                           setIsCountryDropdownOpen(false);
                         }}
-                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-colors ${
+                        className={`flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left transition-colors ${
                           isSelected
                             ? 'bg-accent-500/15 text-accent-300 font-medium'
-                            : 'hover:bg-dark-800/60 text-dark-200'
+                            : 'hover:bg-white/[0.06] text-dark-200'
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
@@ -300,7 +355,7 @@ export default function DedicatedServerOrder() {
                           </div>
                         </div>
                         {isSelected && (
-                          <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-500 text-white">
+                          <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-500 text-black">
                             <CheckIcon className="h-3 w-3 stroke-[3]" />
                           </div>
                         )}
@@ -339,10 +394,10 @@ export default function DedicatedServerOrder() {
                   key={p.period_days}
                   type="button"
                   onClick={() => setSelectedPeriodDays(p.period_days)}
-                  className={`relative flex flex-col justify-between rounded-xl border p-3.5 text-left transition-all ${
+                  className={`relative flex flex-col justify-between rounded-2xl border p-4 text-left backdrop-blur-xl transition-all duration-200 ${
                     isSelected
-                      ? 'border-accent-500 bg-accent-500/10'
-                      : 'border-dark-700/60 bg-dark-800/40 hover:border-dark-600'
+                      ? 'border-accent-500/80 bg-accent-500/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)]'
+                      : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
                   }`}
                 >
                   <div className="mb-2 flex items-center justify-between">
@@ -350,7 +405,7 @@ export default function DedicatedServerOrder() {
                       {p.label || `${months} мес.`}
                     </span>
                     {p.discount_percent > 0 && (
-                      <span className="rounded bg-success-500/15 px-1.5 py-0.5 text-[11px] font-bold text-success-400">
+                      <span className="rounded-full border border-success-500/25 bg-success-500/15 px-2 py-0.5 text-[11px] font-bold text-success-300">
                         -{p.discount_percent}%
                       </span>
                     )}
@@ -383,13 +438,13 @@ export default function DedicatedServerOrder() {
             <button
               type="button"
               onClick={() => setDeploymentType('turnkey')}
-              className={`flex items-start gap-3.5 rounded-xl border p-4 text-left transition-all ${
+              className={`flex items-start gap-3.5 rounded-2xl border p-4.5 text-left backdrop-blur-xl transition-all duration-200 ${
                 deploymentType === 'turnkey'
-                  ? 'border-accent-500 bg-accent-500/10'
-                  : 'border-dark-700/60 bg-dark-800/40 hover:border-dark-600'
+                  ? 'border-accent-500/80 bg-accent-500/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)]'
+                  : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
               }`}
             >
-              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-500/15 text-accent-400">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-500/15 text-accent-400">
                 <ServerIcon className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
@@ -398,8 +453,8 @@ export default function DedicatedServerOrder() {
                     {t('dedicated.deployment.turnkey.title', 'Под ключ (Turnkey)')}
                   </span>
                   {deploymentType === 'turnkey' && (
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-500 text-on-accent">
-                      <CheckIcon className="h-3 w-3" />
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-500 text-black">
+                      <CheckIcon className="h-3 w-3 stroke-[3]" />
                     </div>
                   )}
                 </div>
@@ -415,13 +470,13 @@ export default function DedicatedServerOrder() {
             <button
               type="button"
               onClick={() => setDeploymentType('byos')}
-              className={`flex items-start gap-3.5 rounded-xl border p-4 text-left transition-all ${
+              className={`flex items-start gap-3.5 rounded-2xl border p-4.5 text-left backdrop-blur-xl transition-all duration-200 ${
                 deploymentType === 'byos'
-                  ? 'border-accent-500 bg-accent-500/10'
-                  : 'border-dark-700/60 bg-dark-800/40 hover:border-dark-600'
+                  ? 'border-accent-500/80 bg-accent-500/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)]'
+                  : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
               }`}
             >
-              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-500/15 text-accent-400">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-500/15 text-accent-400">
                 <CpuIcon className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
@@ -430,8 +485,8 @@ export default function DedicatedServerOrder() {
                     {t('dedicated.deployment.byos.title', 'Свой сервер (BYOS)')}
                   </span>
                   {deploymentType === 'byos' && (
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-500 text-on-accent">
-                      <CheckIcon className="h-3 w-3" />
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-500 text-black">
+                      <CheckIcon className="h-3 w-3 stroke-[3]" />
                     </div>
                   )}
                 </div>
@@ -456,7 +511,7 @@ export default function DedicatedServerOrder() {
           </div>
           <div className="space-y-2.5">
             {/* AI access option */}
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-dark-700/60 bg-dark-800/40 p-3.5 transition-colors hover:border-dark-600">
+            <label className="flex cursor-pointer items-start gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-xl transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05]">
               <input
                 type="checkbox"
                 checked={aiAccess}
@@ -464,10 +519,10 @@ export default function DedicatedServerOrder() {
                 className="hidden"
               />
               <div
-                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border-2 transition-all ${
                   aiAccess
-                    ? 'border-accent-500 bg-accent-500 shadow-sm'
-                    : 'border-dark-600 bg-dark-800/80 hover:border-dark-500'
+                    ? 'border-accent-500 bg-accent-500'
+                    : 'border-white/20 bg-white/[0.03] hover:border-white/40'
                 }`}
                 aria-hidden="true"
               >
@@ -484,13 +539,13 @@ export default function DedicatedServerOrder() {
                   )}
                 </p>
               </div>
-              <span className="rounded bg-accent-500/15 px-2 py-0.5 text-xs font-semibold text-accent-400">
+              <span className="rounded-full border border-accent-500/30 bg-accent-500/15 px-2.5 py-0.5 text-xs font-semibold text-accent-400">
                 {t('dedicated.options.included', 'Включено')}
               </span>
             </label>
 
             {/* YouTube no ads option */}
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-dark-700/60 bg-dark-800/40 p-3.5 transition-colors hover:border-dark-600">
+            <label className="flex cursor-pointer items-start gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-xl transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05]">
               <input
                 type="checkbox"
                 checked={youtubeNoAds}
@@ -498,10 +553,10 @@ export default function DedicatedServerOrder() {
                 className="hidden"
               />
               <div
-                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border-2 transition-all ${
                   youtubeNoAds
-                    ? 'border-accent-500 bg-accent-500 shadow-sm'
-                    : 'border-dark-600 bg-dark-800/80 hover:border-dark-500'
+                    ? 'border-accent-500 bg-accent-500'
+                    : 'border-white/20 bg-white/[0.03] hover:border-white/40'
                 }`}
                 aria-hidden="true"
               >
@@ -518,7 +573,7 @@ export default function DedicatedServerOrder() {
                   )}
                 </p>
               </div>
-              <span className="rounded bg-accent-500/15 px-2 py-0.5 text-xs font-semibold text-accent-400">
+              <span className="rounded-full border border-accent-500/30 bg-accent-500/15 px-2.5 py-0.5 text-xs font-semibold text-accent-400">
                 {t('dedicated.options.included', 'Включено')}
               </span>
             </label>
@@ -527,10 +582,10 @@ export default function DedicatedServerOrder() {
 
         {/* Summary Card & Payment */}
         <div
-          className="rounded-2xl border p-4 sm:p-6"
-          style={{ background: g.cardBg, borderColor: g.cardBorder }}
+          className="rounded-3xl border border-white/[0.08] p-5 sm:p-6 backdrop-blur-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]"
+          style={{ background: isDark ? 'rgba(20, 20, 26, 0.6)' : 'rgba(255, 255, 255, 0.6)' }}
         >
-          <div className="mb-4 flex flex-col justify-between gap-2 border-b border-dark-700/50 pb-4 sm:flex-row sm:items-center">
+          <div className="mb-4 flex flex-col justify-between gap-2 border-b border-white/[0.08] pb-4 sm:flex-row sm:items-center">
             <div>
               <div className="text-xs uppercase tracking-wider text-dark-400">
                 {t('dedicated.summary.heading', 'Итоговый расчёт')}
@@ -578,15 +633,15 @@ export default function DedicatedServerOrder() {
             </span>
           </div>
 
-          {/* Action button */}
+          {/* Action button — clean, flat, NO glowing shadows */}
           <button
             type="button"
             onClick={handleSubmit}
             disabled={orderMutation.isPending || isConfigLoading}
-            className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-colors disabled:opacity-50 ${
+            className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold transition-transform active:scale-[0.99] disabled:opacity-50 ${
               hasSufficientBalance
-                ? 'bg-accent-500 text-on-accent hover:bg-accent-600'
-                : 'bg-error-500/20 text-error-400 hover:bg-error-500/30'
+                ? 'bg-accent-500 text-black hover:bg-accent-400'
+                : 'border border-error-500/30 bg-error-500/15 text-error-400 hover:bg-error-500/25'
             }`}
           >
             <WalletIcon className="h-4 w-4" />
