@@ -7,13 +7,15 @@ export function DiscountPromoBanner() {
       className="group relative block w-full overflow-hidden rounded-[26px] sm:rounded-[36px] md:rounded-[44px] lg:rounded-[50px] transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
       style={{
         background: 'linear-gradient(180deg, rgba(0, 0, 0, 1) 0%, rgba(0, 88, 57, 1) 100%)',
-        border: '3px solid rgba(255, 255, 255, 0.15)',
-        boxShadow: '0 4px 24px -2px rgba(0, 88, 57, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+        boxShadow: '0 4px 24px -2px rgba(0, 88, 57, 0.35)',
       }}
     >
-      <div className="relative flex h-[140px] xs:h-[150px] sm:h-[160px] md:h-[170px] lg:h-[175px] xl:h-[185px] w-full items-center px-5 sm:px-8 md:px-10 lg:px-12">
+      {/* Adaptive 15% white outline overlay (scales from 2px on mobile to 3px on desktop, sits above coin and background) */}
+      <div className="pointer-events-none absolute inset-0 z-20 rounded-[inherit] border-2 sm:border-[2.5px] lg:border-[3px] border-white/15" />
+
+      <div className="relative flex h-[140px] xs:h-[148px] sm:h-[155px] md:h-[165px] lg:h-[175px] xl:h-[190px] w-full items-center px-5 sm:px-8 md:px-10 lg:px-12">
         {/* Text container */}
-        <div className="relative z-10 max-w-[62%] sm:max-w-[58%] md:max-w-[520px]">
+        <div className="relative z-10 max-w-[62%] sm:max-w-[58%] md:max-w-[500px]">
           <h2
             className="text-left font-bold text-white tracking-tight leading-[1.1] text-[19px] xs:text-[22px] sm:text-[28px] md:text-[34px] lg:text-[38px] xl:text-[42px]"
             style={{
@@ -36,9 +38,9 @@ export function DiscountPromoBanner() {
           </h2>
         </div>
 
-        {/* Coin element (x: 530, y: -32 at 580x324 in 1000x200 banner) */}
+        {/* Coin element - adaptively scales from mobile to PC (x: 530, y: -32 at 580x324 in 1000x200 banner) */}
         <div
-          className="pointer-events-none absolute bg-center bg-no-repeat bg-cover transition-transform duration-500 group-hover:scale-105 left-[48%] xs:left-[50%] sm:left-[52%] lg:left-[53%] top-[-16px] xs:top-[-20px] sm:top-[-26px] md:top-[-28px] lg:top-[-30px] xl:top-[-32px] w-[320px] xs:w-[360px] sm:w-[460px] md:w-[500px] lg:w-[540px] xl:w-[580px] h-[179px] xs:h-[201px] sm:h-[257px] md:h-[279px] lg:h-[301px] xl:h-[324px]"
+          className="pointer-events-none absolute bg-center bg-no-repeat bg-cover transition-transform duration-500 group-hover:scale-105 left-[48%] xs:left-[49%] sm:left-[50%] md:left-[52%] lg:left-[53%] top-[-14px] xs:top-[-16px] sm:top-[-20px] md:top-[-24px] lg:top-[-28px] xl:top-[-32px] w-[300px] xs:w-[330px] sm:w-[380px] md:w-[440px] lg:w-[510px] xl:w-[580px] h-[168px] xs:h-[185px] sm:h-[212px] md:h-[246px] lg:h-[285px] xl:h-[324px]"
           style={{
             backgroundImage: 'url("/images/v16_6.png")',
           }}
