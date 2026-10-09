@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -18,12 +18,12 @@ import {
 import {
   ServerIcon,
   CheckIcon,
-  ShieldIcon,
   SparklesIcon,
   WalletIcon,
   XIcon,
   InfoIcon,
   CpuIcon,
+  ChevronDownIcon,
 } from '@/components/icons';
 
 type ContinentFilter = 'all' | 'europe' | 'america' | 'asia';
@@ -48,6 +48,23 @@ export default function DedicatedServerOrder() {
   const [youtubeNoAds, setYoutubeNoAds] = useState<boolean>(true);
   const [continent, setContinent] = useState<ContinentFilter>('all');
   const [showTopUpModal, setShowTopUpModal] = useState<boolean>(false);
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState<boolean>(false);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        countryDropdownRef.current &&
+        !countryDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsCountryDropdownOpen(false);
+      }
+    }
+    if (isCountryDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isCountryDropdownOpen]);
 
   // Load config
   const { data: config, isLoading: isConfigLoading } = useQuery({
@@ -156,102 +173,148 @@ export default function DedicatedServerOrder() {
         </div>
       </div>
 
-      {/* Benefits banner */}
-      <div
-        className="mb-8 rounded-2xl border p-4 sm:p-5"
-        style={{
-          background: isDark ? 'rgba(15, 23, 42, 0.6)' : 'rgba(255, 255, 255, 0.8)',
-          borderColor: g.cardBorder,
-        }}
-      >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-500/15 text-accent-400">
-              <ShieldIcon className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-accent-400">
-                {t('dedicated.banner.badge', 'Dedicated VPS')}
-              </div>
-              <p
-                className="text-sm font-medium leading-relaxed sm:text-base"
-                style={{ color: g.text }}
-              >
-                {t(
-                  'dedicated.banner.text',
-                  '100% ваш сервер без соседей • 0 лимитов на трафик и устройства • Чистый IP',
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="space-y-8">
-        {/* Step 1: Continent filter & Country selection */}
+        {/* Step 1: Country selection (Dropdown) */}
         <section>
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <label className="text-sm font-semibold sm:text-base" style={{ color: g.text }}>
-              {t('dedicated.step.country', '1. Выберите страну размещения')}
-            </label>
-            <div className="flex rounded-lg border border-dark-700/60 bg-dark-900/60 p-0.5 text-xs">
-              {(
-                [
-                  { id: 'all', label: t('dedicated.continents.all', 'Все') },
-                  { id: 'europe', label: t('dedicated.continents.europe', 'Европа') },
-                  { id: 'america', label: t('dedicated.continents.america', 'Америка') },
-                  { id: 'asia', label: t('dedicated.continents.asia', 'Азия') },
-                ] as const
-              ).map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setContinent(tab.id)}
-                  className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
-                    continent === tab.id
-                      ? 'bg-accent-500 text-on-accent'
-                      : 'text-dark-400 hover:text-dark-200'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <label
+            className="mb-3 block text-sm font-semibold sm:text-base"
+            style={{ color: g.text }}
+          >
+            {t('dedicated.step.country', '1. Выберите страну размещения')}
+          </label>
 
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4">
-            {filteredCountries.map((c: DedicatedCountry) => {
-              const isSelected = selectedCountryCode === c.code;
-              return (
-                <button
-                  key={c.code}
-                  type="button"
-                  onClick={() => setSelectedCountryCode(c.code)}
-                  className={`relative flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
-                    isSelected
-                      ? 'border-accent-500 bg-accent-500/10 shadow-sm'
-                      : 'border-dark-700/60 bg-dark-800/40 hover:border-dark-600'
-                  }`}
-                >
-                  <span className="text-2xl leading-none">
-                    {c.flag || getFlagEmoji(c.code) || '🌐'}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="truncate text-sm font-medium" style={{ color: g.text }}>
-                        {c.name}
-                      </span>
-                    </div>
-                    <span className="text-xs text-dark-400">{c.code}</span>
+          <div ref={countryDropdownRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
+              aria-expanded={isCountryDropdownOpen}
+              className={`flex w-full items-center justify-between rounded-xl border p-3.5 text-left transition-all ${
+                isCountryDropdownOpen
+                  ? 'border-accent-500 bg-accent-500/10 shadow-sm ring-1 ring-accent-500/30'
+                  : 'border-dark-700/60 bg-dark-800/40 hover:border-dark-600'
+              }`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-2xl leading-none">
+                  {selectedCountry?.flag || getFlagEmoji(selectedCountryCode) || '🌐'}
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="truncate text-sm font-semibold sm:text-base"
+                      style={{ color: g.text }}
+                    >
+                      {selectedCountry?.name || selectedCountryCode}
+                    </span>
+                    <span className="rounded bg-dark-700/70 px-1.5 py-0.5 text-xs text-dark-300">
+                      {selectedCountryCode}
+                    </span>
                   </div>
-                  {isSelected && (
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-500 text-on-accent">
-                      <CheckIcon className="h-3 w-3" />
+                  <p className="text-xs text-dark-400 capitalize">
+                    {selectedCountry?.continent
+                      ? t(
+                          `dedicated.continents.${selectedCountry.continent}`,
+                          selectedCountry.continent,
+                        )
+                      : ''}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-dark-400">
+                <ChevronDownIcon
+                  className={`h-5 w-5 transition-transform duration-200 ${
+                    isCountryDropdownOpen ? 'rotate-180 text-accent-400' : ''
+                  }`}
+                />
+              </div>
+            </button>
+
+            {/* Dropdown Menu */}
+            {isCountryDropdownOpen && (
+              <div
+                className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl"
+                style={{
+                  background: isDark ? 'rgba(23, 23, 28, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+                  borderColor: g.cardBorder,
+                }}
+              >
+                {/* Continent filter tabs inside dropdown */}
+                <div className="border-b border-dark-700/50 p-2.5">
+                  <div className="flex rounded-lg border border-dark-700/60 bg-dark-900/60 p-0.5 text-xs">
+                    {(
+                      [
+                        { id: 'all', label: t('dedicated.continents.all', 'Все') },
+                        { id: 'europe', label: t('dedicated.continents.europe', 'Европа') },
+                        { id: 'america', label: t('dedicated.continents.america', 'Америка') },
+                        { id: 'asia', label: t('dedicated.continents.asia', 'Азия') },
+                      ] as const
+                    ).map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setContinent(tab.id);
+                        }}
+                        className={`flex-1 rounded-md py-1 font-medium text-center transition-colors ${
+                          continent === tab.id
+                            ? 'bg-accent-500 text-on-accent'
+                            : 'text-dark-400 hover:text-dark-200'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Country items */}
+                <div className="max-h-60 overflow-y-auto divide-y divide-dark-700/20 p-1.5">
+                  {filteredCountries.map((c: DedicatedCountry) => {
+                    const isSelected = selectedCountryCode === c.code;
+                    return (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCountryCode(c.code);
+                          setIsCountryDropdownOpen(false);
+                        }}
+                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-colors ${
+                          isSelected
+                            ? 'bg-accent-500/15 text-accent-300 font-medium'
+                            : 'hover:bg-dark-800/60 text-dark-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-xl leading-none">
+                            {c.flag || getFlagEmoji(c.code) || '🌐'}
+                          </span>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-dark-100 truncate">
+                              {c.name}
+                            </div>
+                            <div className="text-xs text-dark-400 capitalize">
+                              {t(`dedicated.continents.${c.continent}`, c.continent)} • {c.code}
+                            </div>
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-500 text-white">
+                            <CheckIcon className="h-3 w-3 stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {filteredCountries.length === 0 && (
+                    <div className="py-6 text-center text-xs text-dark-400">
+                      {t('common.notFound', 'Ничего не найдено')}
                     </div>
                   )}
-                </button>
-              );
-            })}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -383,12 +446,12 @@ export default function DedicatedServerOrder() {
           </div>
         </section>
 
-        {/* Step 4: VIP options */}
+        {/* Step 4: Additional options */}
         <section>
           <div className="mb-3 flex items-center gap-2">
             <SparklesIcon className="h-4 w-4 text-accent-400" />
             <label className="text-sm font-semibold sm:text-base" style={{ color: g.text }}>
-              {t('dedicated.step.options', '4. VIP-опции')}
+              {t('dedicated.step.options', '4. Доп. опции')}
             </label>
           </div>
           <div className="space-y-2.5">
@@ -398,8 +461,18 @@ export default function DedicatedServerOrder() {
                 type="checkbox"
                 checked={aiAccess}
                 onChange={(e) => setAiAccess(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-dark-600 text-accent-500 focus:ring-accent-500"
+                className="sr-only"
               />
+              <div
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
+                  aiAccess
+                    ? 'border-accent-500 bg-accent-500 text-white shadow-sm'
+                    : 'border-dark-600 bg-dark-800/80 hover:border-dark-500'
+                }`}
+                aria-hidden="true"
+              >
+                {aiAccess && <CheckIcon className="h-3.5 w-3.5 stroke-[2.5] text-white" />}
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium" style={{ color: g.text }}>
                   {t('dedicated.options.ai.title', 'Доступ ко всем заблокированным нейросетям')}
@@ -422,8 +495,18 @@ export default function DedicatedServerOrder() {
                 type="checkbox"
                 checked={youtubeNoAds}
                 onChange={(e) => setYoutubeNoAds(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-dark-600 text-accent-500 focus:ring-accent-500"
+                className="sr-only"
               />
+              <div
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
+                  youtubeNoAds
+                    ? 'border-accent-500 bg-accent-500 text-white shadow-sm'
+                    : 'border-dark-600 bg-dark-800/80 hover:border-dark-500'
+                }`}
+                aria-hidden="true"
+              >
+                {youtubeNoAds && <CheckIcon className="h-3.5 w-3.5 stroke-[2.5] text-white" />}
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium" style={{ color: g.text }}>
                   {t('dedicated.options.youtube.title', 'YouTube без рекламы на всех устройствах')}

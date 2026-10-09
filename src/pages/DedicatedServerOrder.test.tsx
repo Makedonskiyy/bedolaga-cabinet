@@ -116,6 +116,10 @@ describe('DedicatedServerOrder page', () => {
     const germanyElements = await screen.findAllByText('Германия');
     expect(germanyElements.length).toBeGreaterThan(0);
 
+    // Open dropdown to see countries list
+    const countryDropdownBtn = screen.getByRole('button', { name: /Германия/i });
+    fireEvent.click(countryDropdownBtn);
+
     expect(screen.getByText('США')).toBeTruthy();
     expect(screen.getAllByText('1 месяц').length).toBeGreaterThan(0);
     expect(screen.getByText('3 месяца')).toBeTruthy();
