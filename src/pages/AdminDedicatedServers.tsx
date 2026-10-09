@@ -64,10 +64,7 @@ export default function AdminDedicatedServers() {
   const [discount30, setDiscount30] = useState<number>(0);
   const [discount90, setDiscount90] = useState<number>(10);
   const [discount180, setDiscount180] = useState<number>(15);
-  const [discount365, setDiscount365] = useState<number>(22);
-  const [countryPrices, setCountryPrices] = useState<CountryPriceItem[]>([
-    { code: 'US', priceRubles: 1490 },
-  ]);
+  const [countryPrices, setCountryPrices] = useState<CountryPriceItem[]>([]);
   const [newCountryCode, setNewCountryCode] = useState('');
   const [newCountryPrice, setNewCountryPrice] = useState<number>(1490);
 
@@ -120,16 +117,14 @@ export default function AdminDedicatedServers() {
         setDiscount365(pricingData.period_discounts['365'] ?? 22);
       }
 
-      if (pricingData.country_prices_kopeks) {
+      if (pricingData.country_prices_kopeks !== undefined) {
         const items: CountryPriceItem[] = Object.entries(pricingData.country_prices_kopeks).map(
           ([code, kopeks]) => ({
             code,
             priceRubles: kopeks / 100,
           }),
         );
-        if (items.length > 0) {
-          setCountryPrices(items);
-        }
+        setCountryPrices(items);
       }
     }
   }, [pricingData]);

@@ -145,8 +145,43 @@ export default function DedicatedServerOrder() {
   });
 
   const countries = config?.countries || [];
-  const periods = config?.periods || [];
-  const basePriceRubles = config?.base_price_rubles || 590;
+
+  const periods = useMemo<DedicatedPeriodDiscount[]>(() => {
+    if (config?.periods && config.periods.length > 0) {
+      return config.periods;
+    }
+    const periodPrices = (config as any)?.period_prices;
+    if (periodPrices && periodPrices.length > 0) {
+      return periodPrices.map((p: any) => ({
+        period_days: p.days,
+        discount_percent: p.discount_percent || 0,
+        label: `${p.days >= 365 ? 12 : Math.round(p.days / 30)} мес.`,
+      }));
+    }
+    return [
+      { period_days: 30, discount_percent: 0, label: '1 месяц' },
+      { period_days: 90, discount_percent: 10, label: '3 месяца' },
+      { period_days: 180, discount_percent: 15, label: '6 месяцев' },
+      { period_days: 365, discount_percent: 22, label: '1 год' },
+    ];
+  }, [config]);
+
+  // Selected country
+  const selectedCountry = useMemo(() => {
+    return countries.find((c) => c.code === selectedCountryCode);
+  }, [countries, selectedCountryCode]);
+
+  // Dynamic effective base price: Country override > Country config map > Base config price > 1290
+  const effectiveBasePriceRubles = useMemo(() => {
+    if (selectedCountry?.base_price_rubles) {
+      return selectedCountry.base_price_rubles;
+    }
+    const countryPrices = (config as any)?.country_prices_rubles;
+    if (countryPrices && countryPrices[selectedCountryCode]) {
+      return countryPrices[selectedCountryCode];
+    }
+    return config?.base_price_rubles || 1290;
+  }, [selectedCountry, config, selectedCountryCode]);
 
   // Filtered countries
   const filteredCountries = useMemo(() => {
@@ -162,7 +197,7 @@ export default function DedicatedServerOrder() {
   // Price calculations
   const calculatePrice = useMemo(() => {
     const months = Math.max(1, Math.round(selectedPeriodDays / 30));
-    const rawTotal = basePriceRubles * months;
+    const rawTotal = effectiveBasePriceRubles * months;
     const discount = (rawTotal * (activePeriod.discount_percent || 0)) / 100;
     const total = Math.round(rawTotal - discount);
     return {
@@ -171,7 +206,7 @@ export default function DedicatedServerOrder() {
       discount,
       total,
     };
-  }, [basePriceRubles, selectedPeriodDays, activePeriod]);
+  }, [effectiveBasePriceRubles, selectedPeriodDays, activePeriod]);
 
   // User balance
   const userBalanceRubles = useMemo(() => {
@@ -231,8 +266,6 @@ export default function DedicatedServerOrder() {
     }
     orderMutation.mutate();
   };
-
-  const selectedCountry = countries.find((c) => c.code === selectedCountryCode);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
@@ -344,7 +377,16 @@ export default function DedicatedServerOrder() {
                             {c.flag || getFlagEmoji(c.code) || '🌐'}
                           </span>
                           <div className="min-w-0">
-                            <div className="text-sm font-medium text-white truncate">{c.name}</div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-white truncate">
+                                {c.name}
+                              </span>
+                              {c.base_price_rubles ? (
+                                <span className="text-xs text-accent-400 font-medium">
+                                  {formatAmount(c.base_price_rubles)}&nbsp;{currencySymbol}/мес
+                                </span>
+                              ) : null}
+                            </div>
                             <div className="text-xs text-zinc-400">
                               {getContinentDisplay(c.continent)} • {c.code}
                             </div>
@@ -378,7 +420,7 @@ export default function DedicatedServerOrder() {
             {periods.map((p) => {
               const isSelected = selectedPeriodDays === p.period_days;
               const months = Math.max(1, Math.round(p.period_days / 30));
-              const rawTotal = basePriceRubles * months;
+              const rawTotal = effectiveBasePriceRubles * months;
               const disc = (rawTotal * (p.discount_percent || 0)) / 100;
               const periodTotal = Math.round(rawTotal - disc);
 
