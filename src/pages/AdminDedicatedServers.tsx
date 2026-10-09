@@ -27,6 +27,7 @@ import {
   CopyIcon,
   PlusIcon,
   TrashIcon,
+  CpuIcon,
 } from '@/components/icons';
 
 type AdminMainTab = 'orders' | 'pricing';
@@ -76,6 +77,8 @@ export default function AdminDedicatedServers() {
     isLoading: isOrdersLoading,
     isRefetching: isOrdersRefetching,
     refetch: refetchOrders,
+    isError: isOrdersError,
+    error: ordersError,
   } = useQuery({
     queryKey: ['admin-dedicated-servers', statusFilter],
     queryFn: () => dedicatedServersApi.getAdminOrders(statusFilter),
@@ -238,7 +241,8 @@ export default function AdminDedicatedServers() {
 
   const handleOpenAssign = (order: DedicatedServerOrder) => {
     setAssigningOrder(order);
-    setIpAddress(order.ip_address || '');
+    const prefillIp = order.ip_address || order.options?.byos?.ip || '';
+    setIpAddress(prefillIp);
     setSquadUuid(order.squad_uuid || '');
     setAdminNotes(order.admin_notes || '');
   };
@@ -403,6 +407,27 @@ export default function AdminDedicatedServers() {
             <SkeletonGroup className="space-y-3">
               <Skeleton variant="card" count={3} className="h-28" />
             </SkeletonGroup>
+          ) : isOrdersError ? (
+            <div className="rounded-2xl border border-error-500/30 bg-error-500/[0.05] p-8 text-center backdrop-blur-xl">
+              <XIcon className="mx-auto mb-3 h-10 w-10 text-error-400" />
+              <h3 className="text-base font-semibold text-white">
+                {t('admin.dedicated.loadError', 'Ошибка загрузки заказов')}
+              </h3>
+              <p className="mt-1 text-xs text-zinc-400 max-w-md mx-auto">
+                {getApiErrorMessage(
+                  ordersError,
+                  'Не удалось получить список заказов. Проверьте права администратора или соединение с сервером.',
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={() => refetchOrders()}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/20"
+              >
+                <RefreshIcon className="h-3.5 w-3.5" />
+                {t('common.retry', 'Повторить')}
+              </button>
+            </div>
           ) : orders.length === 0 ? (
             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-12 text-center backdrop-blur-xl">
               <ServerIcon className="mx-auto mb-3 h-10 w-10 text-zinc-500" />
@@ -498,8 +523,8 @@ export default function AdminDedicatedServers() {
                         </div>
                       </div>
 
-                      {/* Middle: Configuration details (IP, Squad, Notes) */}
-                      <div className="rounded-xl border border-white/[0.06] bg-black/40 p-3 text-xs sm:min-w-[260px]">
+                      {/* Middle: Configuration details (IP, Squad, Notes, BYOS) */}
+                      <div className="rounded-xl border border-white/[0.06] bg-black/40 p-3 text-xs sm:min-w-[280px]">
                         <div className="flex items-center justify-between text-zinc-400">
                           <span>IP-адрес:</span>
                           <span className="font-mono font-semibold text-white">
@@ -512,6 +537,54 @@ export default function AdminDedicatedServers() {
                             {order.squad_uuid || '—'}
                           </span>
                         </div>
+
+                        {/* Client BYOS Credentials if available */}
+                        {order.options?.byos && (
+                          <div className="mt-1.5 rounded-lg border border-accent-500/20 bg-accent-500/[0.05] p-2 space-y-1">
+                            <div className="flex items-center gap-1 font-semibold text-accent-400 text-[11px]">
+                              <CpuIcon className="h-3 w-3" />
+                              <span>Данные VPS от клиента:</span>
+                            </div>
+                            {order.options.byos.ip && (
+                              <div className="flex items-center justify-between text-[11px] text-zinc-300">
+                                <span className="text-zinc-400">IP клиента:</span>
+                                <span className="font-mono text-white font-medium">
+                                  {order.options.byos.ip}
+                                </span>
+                              </div>
+                            )}
+                            {order.options.byos.ssh_port && (
+                              <div className="flex items-center justify-between text-[11px] text-zinc-300">
+                                <span className="text-zinc-400">SSH порт:</span>
+                                <span className="font-mono text-white">
+                                  {order.options.byos.ssh_port}
+                                </span>
+                              </div>
+                            )}
+                            {order.options.byos.ssh_password && (
+                              <div className="flex items-center justify-between text-[11px] text-zinc-300">
+                                <span className="text-zinc-400">Root пароль:</span>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    await copyToClipboard(order.options?.byos?.ssh_password || '');
+                                    notify.success('Пароль root скопирован');
+                                  }}
+                                  className="inline-flex items-center gap-1 font-mono text-accent-400 hover:underline"
+                                >
+                                  <span>{order.options.byos.ssh_password}</span>
+                                  <CopyIcon className="h-3 w-3" />
+                                </button>
+                              </div>
+                            )}
+                            {order.options.byos.notes && (
+                              <div className="border-t border-accent-500/20 pt-1 text-[10px] text-zinc-400 italic">
+                                Заметка: {order.options.byos.notes}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {order.subscription_url && (
                           <div className="mt-1 flex items-center justify-between text-zinc-400 border-t border-white/[0.06] pt-1">
                             <span>Подписка:</span>
@@ -845,6 +918,53 @@ export default function AdminDedicatedServers() {
               }}
               className="space-y-4"
             >
+              {/* BYOS Client Credentials Hint if present */}
+              {assigningOrder.options?.byos && (
+                <div className="rounded-2xl border border-accent-500/30 bg-accent-500/[0.08] p-3.5 text-xs space-y-1.5">
+                  <div className="font-semibold text-accent-400 flex items-center gap-1.5">
+                    <CpuIcon className="h-4 w-4" />
+                    Реквизиты VPS от клиента (BYOS):
+                  </div>
+                  {assigningOrder.options.byos.ip && (
+                    <div className="flex items-center justify-between text-zinc-300">
+                      <span className="text-zinc-400">IP клиента:</span>
+                      <span className="font-mono text-white font-medium">
+                        {assigningOrder.options.byos.ip}
+                      </span>
+                    </div>
+                  )}
+                  {assigningOrder.options.byos.ssh_port && (
+                    <div className="flex items-center justify-between text-zinc-300">
+                      <span className="text-zinc-400">SSH порт:</span>
+                      <span className="font-mono text-white">
+                        {assigningOrder.options.byos.ssh_port}
+                      </span>
+                    </div>
+                  )}
+                  {assigningOrder.options.byos.ssh_password && (
+                    <div className="flex items-center justify-between text-zinc-300">
+                      <span className="text-zinc-400">Пароль root:</span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await copyToClipboard(assigningOrder.options?.byos?.ssh_password || '');
+                          notify.success('Пароль root скопирован');
+                        }}
+                        className="inline-flex items-center gap-1 font-mono text-accent-400 hover:underline"
+                      >
+                        <span>{assigningOrder.options.byos.ssh_password}</span>
+                        <CopyIcon className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+                  {assigningOrder.options.byos.notes && (
+                    <div className="border-t border-accent-500/20 pt-1 text-[11px] text-zinc-400 italic">
+                      Пожелания клиента: {assigningOrder.options.byos.notes}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* IP Address */}
               <div>
                 <label className="mb-1 block text-xs font-semibold text-zinc-300">

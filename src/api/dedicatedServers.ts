@@ -56,7 +56,13 @@ export interface DedicatedServerOrder {
   options: {
     ai_access?: boolean;
     youtube_no_ads?: boolean;
-    [key: string]: boolean | undefined;
+    byos?: {
+      ip?: string;
+      ssh_port?: number;
+      ssh_password?: string;
+      notes?: string;
+    };
+    [key: string]: any;
   };
   subscription_url?: string | null;
   setup_script?: string | null;
@@ -77,6 +83,10 @@ export interface CreateDedicatedOrderRequest {
     youtube_no_ads: boolean;
     [key: string]: boolean;
   };
+  server_ip?: string;
+  server_ssh_port?: number;
+  server_ssh_password?: string;
+  server_notes?: string;
 }
 
 export interface AssignDedicatedOrderRequest {

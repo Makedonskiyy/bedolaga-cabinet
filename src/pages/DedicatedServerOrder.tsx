@@ -110,6 +110,11 @@ export default function DedicatedServerOrder() {
   const [selectedCountryCode, setSelectedCountryCode] = useState<string>('DE');
   const [selectedPeriodDays, setSelectedPeriodDays] = useState<number>(30);
   const [deploymentType, setDeploymentType] = useState<'turnkey' | 'byos'>('turnkey');
+  const [serverIp, setServerIp] = useState<string>('');
+  const [serverSshPort, setServerSshPort] = useState<number>(22);
+  const [serverSshPassword, setServerSshPassword] = useState<string>('');
+  const [serverNotes, setServerNotes] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [aiAccess, setAiAccess] = useState<boolean>(true);
   const [youtubeNoAds, setYoutubeNoAds] = useState<boolean>(true);
   const [continent, setContinent] = useState<ContinentFilter>('all');
@@ -191,6 +196,12 @@ export default function DedicatedServerOrder() {
           ai_access: aiAccess,
           youtube_no_ads: youtubeNoAds,
         },
+        server_ip: deploymentType === 'byos' && serverIp.trim() ? serverIp.trim() : undefined,
+        server_ssh_port: deploymentType === 'byos' ? Number(serverSshPort) || 22 : undefined,
+        server_ssh_password:
+          deploymentType === 'byos' && serverSshPassword ? serverSshPassword : undefined,
+        server_notes:
+          deploymentType === 'byos' && serverNotes.trim() ? serverNotes.trim() : undefined,
       });
     },
     onSuccess: async () => {
@@ -510,6 +521,99 @@ export default function DedicatedServerOrder() {
               </div>
             </button>
           </div>
+
+          {/* BYOS Server Details Section */}
+          {deploymentType === 'byos' && (
+            <div className="mt-4 rounded-2xl border border-accent-500/30 bg-accent-500/[0.04] p-4 backdrop-blur-2xl sm:p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <CpuIcon className="h-5 w-5 text-accent-400" />
+                <h3 className="text-sm font-semibold text-white sm:text-base">
+                  {t('dedicated.byos.title', 'Данные вашего VPS (для настройки инженером)')}
+                </h3>
+              </div>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                {t(
+                  'dedicated.byos.desc',
+                  'Укажите IP-адрес и реквизиты root вашего сервера (Ubuntu 22.04/24.04 или Debian 11/12). Инженер выполнит полную настройку и подключение к нашей инфраструктуре.',
+                )}
+              </p>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
+                    {t('dedicated.byos.ip_label', 'IP-адрес сервера')}
+                  </label>
+                  <input
+                    type="text"
+                    value={serverIp}
+                    onChange={(e) => setServerIp(e.target.value)}
+                    placeholder="185.220.101.42"
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2.5 font-mono text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-accent-500/80 focus:bg-white/[0.08]"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
+                    {t('dedicated.byos.port_label', 'SSH порт')}
+                  </label>
+                  <input
+                    type="number"
+                    value={serverSshPort}
+                    onChange={(e) => setServerSshPort(Number(e.target.value))}
+                    placeholder="22"
+                    min={1}
+                    max={65535}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2.5 font-mono text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-accent-500/80 focus:bg-white/[0.08]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-zinc-300">
+                    {t('dedicated.byos.password_label', 'Пароль root')}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-[11px] text-accent-400 hover:underline"
+                  >
+                    {showPassword ? 'Скрыть' : 'Показать'}
+                  </button>
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={serverSshPassword}
+                  onChange={(e) => setServerSshPassword(e.target.value)}
+                  placeholder="Секретный пароль root от VPS"
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2.5 font-mono text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-accent-500/80 focus:bg-white/[0.08]"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-300">
+                  {t('dedicated.byos.notes_label', 'Пожелания или комментарии к серверу')}
+                </label>
+                <textarea
+                  value={serverNotes}
+                  onChange={(e) => setServerNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Например: чистая Ubuntu 22.04, нестандартный SSH порт или специфические порты..."
+                  className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-accent-500/80 focus:bg-white/[0.08]"
+                />
+              </div>
+
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-xs text-zinc-400 flex items-start gap-2">
+                <InfoIcon className="h-4 w-4 shrink-0 text-accent-400 mt-0.5" />
+                <span>
+                  {t(
+                    'dedicated.byos.script_notice',
+                    'Либо вы можете не передавать пароль, а после заказа скопировать готовый установочный bash-скрипт в 1 строку прямо из личного кабинета.',
+                  )}
+                </span>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Step 4: Additional options */}
