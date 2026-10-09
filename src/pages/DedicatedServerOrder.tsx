@@ -461,17 +461,17 @@ export default function DedicatedServerOrder() {
                 type="checkbox"
                 checked={aiAccess}
                 onChange={(e) => setAiAccess(e.target.checked)}
-                className="sr-only"
+                className="hidden"
               />
               <div
                 className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
                   aiAccess
-                    ? 'border-accent-500 bg-accent-500 text-white shadow-sm'
+                    ? 'border-accent-500 bg-accent-500 shadow-sm'
                     : 'border-dark-600 bg-dark-800/80 hover:border-dark-500'
                 }`}
                 aria-hidden="true"
               >
-                {aiAccess && <CheckIcon className="h-3.5 w-3.5 stroke-[2.5] text-white" />}
+                {aiAccess && <CheckIcon className="h-3.5 w-3.5 stroke-[3] text-black" />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium" style={{ color: g.text }}>
@@ -495,17 +495,17 @@ export default function DedicatedServerOrder() {
                 type="checkbox"
                 checked={youtubeNoAds}
                 onChange={(e) => setYoutubeNoAds(e.target.checked)}
-                className="sr-only"
+                className="hidden"
               />
               <div
                 className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
                   youtubeNoAds
-                    ? 'border-accent-500 bg-accent-500 text-white shadow-sm'
+                    ? 'border-accent-500 bg-accent-500 shadow-sm'
                     : 'border-dark-600 bg-dark-800/80 hover:border-dark-500'
                 }`}
                 aria-hidden="true"
               >
-                {youtubeNoAds && <CheckIcon className="h-3.5 w-3.5 stroke-[2.5] text-white" />}
+                {youtubeNoAds && <CheckIcon className="h-3.5 w-3.5 stroke-[3] text-black" />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium" style={{ color: g.text }}>
