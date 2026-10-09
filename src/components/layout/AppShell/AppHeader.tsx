@@ -27,6 +27,7 @@ import { LogoutButton } from './LogoutButton';
 import {
   HomeIcon,
   SubscriptionIcon,
+  ServerIcon,
   WalletIcon,
   UsersIcon,
   ChatIcon,
@@ -151,6 +152,7 @@ export function AppHeader({
   const navItems = [
     { path: '/', label: t('nav.dashboard'), icon: HomeIcon },
     { path: '/subscriptions', label: t('nav.subscription'), icon: SubscriptionIcon },
+    { path: '/servers', label: t('nav.servers', 'Личные серверы'), icon: ServerIcon },
     { path: '/balance', label: t('nav.balance'), icon: WalletIcon },
     ...(referralEnabled ? [{ path: '/referral', label: t('nav.referral'), icon: UsersIcon }] : []),
     { path: '/support', label: t('nav.support'), icon: ChatIcon },

@@ -15,6 +15,7 @@ import {
   PiSortDescending,
   PiArrowsOutSimple,
   PiCode,
+  PiTerminalWindow,
   PiMapPin,
   PiMapTrifold,
   PiNetwork,
@@ -292,6 +293,10 @@ export const ExternalLinkIcon = ({ className }: IconProps) => (
 
 export const CodeIcon = ({ className }: IconProps) => (
   <PiCode className={cn('h-5 w-5', className)} />
+);
+
+export const TerminalIcon = ({ className }: IconProps) => (
+  <PiTerminalWindow className={cn('h-5 w-5', className)} />
 );
 
 export const CollapseIcon = ({ className }: IconProps) => (

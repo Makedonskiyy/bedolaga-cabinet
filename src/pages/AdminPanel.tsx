@@ -327,6 +327,12 @@ const sections: AdminSection[] = [
         permission: 'servers:read',
       },
       {
+        name: 'admin.nav.dedicatedServers',
+        icon: 'server',
+        to: '/admin/servers/dedicated',
+        permission: 'servers:read',
+      },
+      {
         name: 'admin.nav.remnawave',
         icon: 'remnawave',
         to: '/admin/remnawave',

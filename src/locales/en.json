@@ -77,6 +77,7 @@
     "wheel": "Fortune Wheel",
     "menu": "Menu",
     "gift": "Gift",
+    "servers": "Dedicated Servers",
     "navigation": "Navigation"
   },
   "notifications": {
@@ -1486,6 +1487,7 @@
       "wheel": "Wheel",
       "tariffs": "Tariffs",
       "servers": "Squads",
+      "dedicatedServers": "Dedicated Servers",
       "banSystem": "Ban Monitoring",
       "broadcasts": "Broadcasts",
       "users": "Users",
@@ -4017,6 +4019,33 @@
       "mainSettings": "Main Settings",
       "pricingAndLimits": "Pricing & Limits",
       "updateError": "Failed to save changes"
+    },
+    "dedicated": {
+      "title": "Dedicated Servers (Dedicated VPS)",
+      "subtitle": "Order management: assign IP, link RemnaWave squad and reject",
+      "status": {
+        "pending": "Pending setup"
+      },
+      "filters": {
+        "pending": "Pending setup",
+        "active": "Active",
+        "rejected": "Rejected",
+        "all": "All orders"
+      },
+      "noOrders": "No orders found",
+      "noOrdersDesc": "There are no orders in the selected category.",
+      "configure": "Configure",
+      "assignTitle": "VPS Configuration & Activation",
+      "assignSuccess": "Server configured! Customer notified.",
+      "assignError": "Failed to activate server",
+      "assigning": "Saving...",
+      "assignSubmit": "Activate Server",
+      "rejectTitle": "Reject Order",
+      "defaultRejectReason": "No available servers in selected location",
+      "rejectSuccess": "Order rejected. Funds returned to user balance.",
+      "rejectError": "Failed to reject order",
+      "rejecting": "Rejecting...",
+      "rejectSubmit": "Confirm Rejection"
     },
     "campaigns": {
       "title": "Ad Campaigns",
@@ -7887,6 +7916,104 @@
     },
     "subscription": {
       "untitled": "Subscription"
+    }
+  },
+  "dedicated": {
+    "title": "Dedicated Servers",
+    "subtitle": "Personal dedicated VPS without neighbors and without limits",
+    "newServer": "Order Server",
+    "days": "days",
+    "banner": {
+      "badge": "Dedicated VPS",
+      "text": "100% your server without neighbors • 0 limits on traffic & devices • Clean IP"
+    },
+    "step": {
+      "country": "1. Select country location",
+      "period": "2. Rental period",
+      "deployment": "3. Deployment type",
+      "options": "4. VIP options"
+    },
+    "continents": {
+      "all": "All",
+      "europe": "Europe",
+      "america": "America",
+      "asia": "Asia"
+    },
+    "deployment": {
+      "turnkey": {
+        "title": "Turnkey",
+        "label": "Turnkey",
+        "desc": "We provide the VPS and configure everything for you. Ready to use as soon as activated by engineer."
+      },
+      "byos": {
+        "title": "Bring Your Own Server (BYOS)",
+        "label": "BYOS",
+        "desc": "Use your personal VPS. We provide a command for automatic installation and connection."
+      }
+    },
+    "options": {
+      "included": "Included",
+      "ai": {
+        "title": "Access to all blocked AI tools",
+        "desc": "Full access to Gemini, ChatGPT, Claude, Perplexity with no geo-restrictions."
+      },
+      "youtube": {
+        "title": "YouTube without ads on all devices",
+        "desc": "Server-side ad filtering without third-party extensions required."
+      }
+    },
+    "summary": {
+      "heading": "Order summary",
+      "savings": "Savings"
+    },
+    "order": {
+      "title": "Order Dedicated Server",
+      "subtitle": "Dedicated VPS with personal IP and no limits",
+      "success": "Server ordered successfully! Setup has begun.",
+      "error": "Failed to place order",
+      "submitting": "Placing order...",
+      "payFromBalance": "Pay from balance",
+      "needTopUp": "Top up balance (missing"
+    },
+    "topup": {
+      "title": "Insufficient Balance",
+      "desc": "You do not have enough funds to order a dedicated server.",
+      "price": "Order cost",
+      "missing": "Missing"
+    },
+    "status": {
+      "active": "Active",
+      "pending": "Server is being configured by engineer (usually 10–30 min)",
+      "rejected": "Order rejected"
+    },
+    "empty": {
+      "title": "You have no dedicated servers yet",
+      "desc": "Order a personal server with clean IP, unlimited traffic and devices, and access to all AI tools and ad-free YouTube.",
+      "cta": "Order personal server"
+    },
+    "rejected": {
+      "reason": "Rejection reason",
+      "noReason": "Not specified",
+      "refund": "Funds returned to balance"
+    },
+    "params": {
+      "ip": "Dedicated IP",
+      "assigning": "Assigning...",
+      "period": "Valid until",
+      "options": "Options"
+    },
+    "actions": {
+      "copySub": "Copy subscription link",
+      "qr": "QR code",
+      "setupCommand": "Setup command"
+    },
+    "qr": {
+      "title": "Connection QR Code",
+      "hint": "Scan the code with your camera in the client app to add the profile instantly."
+    },
+    "byos": {
+      "modalTitle": "Setup command on your VPS",
+      "modalDesc": "Connect to your VPS via SSH as root and execute the following command:"
     }
   }
 }

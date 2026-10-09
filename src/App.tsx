@@ -86,9 +86,12 @@ const TopUpResult = lazyWithRetry(() => import('./pages/TopUpResult'));
 const ConnectedAccounts = lazyWithRetry(() => import('./pages/ConnectedAccounts'));
 const LinkTelegramCallback = lazyWithRetry(() => import('./pages/LinkTelegramCallback'));
 const MergeAccounts = lazyWithRetry(() => import('./pages/MergeAccounts'));
+const DedicatedServers = lazyWithRetry(() => import('./pages/DedicatedServers'));
+const DedicatedServerOrder = lazyWithRetry(() => import('./pages/DedicatedServerOrder'));
 
 // Admin pages - lazy load (only for admins)
 const AdminPanel = lazyWithRetry(() => import('./pages/AdminPanel'));
+const AdminDedicatedServers = lazyWithRetry(() => import('./pages/AdminDedicatedServers'));
 const AdminTickets = lazyWithRetry(() => import('./pages/AdminTickets'));
 const AdminTicketSettings = lazyWithRetry(() => import('./pages/AdminTicketSettings'));
 const AdminSettings = lazyWithRetry(() => import('./pages/AdminSettings'));
@@ -650,6 +653,46 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/servers"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <DedicatedServers />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cabinet/servers"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <DedicatedServers />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/servers/new"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <DedicatedServerOrder />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cabinet/servers/new"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <DedicatedServerOrder />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin routes */}
         <Route
@@ -811,6 +854,26 @@ function App() {
             <PermissionRoute permission="servers:read">
               <LazyPage>
                 <AdminServers />
+              </LazyPage>
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/servers/dedicated"
+          element={
+            <PermissionRoute permission="servers:read">
+              <LazyPage>
+                <AdminDedicatedServers />
+              </LazyPage>
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/cabinet/admin/servers/dedicated"
+          element={
+            <PermissionRoute permission="servers:read">
+              <LazyPage>
+                <AdminDedicatedServers />
               </LazyPage>
             </PermissionRoute>
           }

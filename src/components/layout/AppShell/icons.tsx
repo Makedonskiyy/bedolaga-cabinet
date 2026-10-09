@@ -22,4 +22,5 @@ export {
   ArrowRightIcon,
   DownloadIcon,
   PaletteIcon,
+  ServerIcon,
 } from '../../icons';
