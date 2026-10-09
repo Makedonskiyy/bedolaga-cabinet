@@ -89,6 +89,25 @@ export interface RejectDedicatedOrderRequest {
   reason: string;
 }
 
+export interface DedicatedPricingConfig {
+  base_monthly_price_kopeks: number;
+  base_monthly_price_rubles?: number;
+  period_discounts: {
+    '30'?: number;
+    '90'?: number;
+    '180'?: number;
+    '365'?: number;
+    [key: string]: number | undefined;
+  };
+  country_prices_kopeks?: Record<string, number>;
+}
+
+export interface UpdateDedicatedPricingRequest {
+  base_monthly_price_kopeks: number;
+  period_discounts: Record<string, number>;
+  country_prices_kopeks?: Record<string, number>;
+}
+
 // Fallback configuration if backend config endpoint is not yet configured or returns partial data
 export const DEFAULT_DEDICATED_CONFIG: DedicatedServersConfigResponse = {
   base_price_rubles: 590,
@@ -249,6 +268,16 @@ export const dedicatedServersApi = {
     return [];
   },
 
+  // POST /cabinet/admin/servers/dedicated/{order_id}/status/setting_up
+  updateStatusSettingUp: async (
+    orderId: number,
+  ): Promise<{ success: boolean; message?: string }> => {
+    const response = await apiClient.post<{ success: boolean; message?: string }>(
+      `/cabinet/admin/servers/dedicated/${orderId}/status/setting_up`,
+    );
+    return response.data;
+  },
+
   // POST /cabinet/admin/servers/dedicated/{order_id}/assign
   assignOrder: async (
     orderId: number,
@@ -271,5 +300,38 @@ export const dedicatedServersApi = {
       data,
     );
     return response.data;
+  },
+
+  // GET /cabinet/admin/servers/dedicated/pricing/config
+  getPricingConfig: async (): Promise<DedicatedPricingConfig> => {
+    const response = await apiClient.get<DedicatedPricingConfig>(
+      '/cabinet/admin/servers/dedicated/pricing/config',
+    );
+    return response.data;
+  },
+
+  // PUT /cabinet/admin/servers/dedicated/pricing/config
+  updatePricingConfig: async (
+    data: UpdateDedicatedPricingRequest,
+  ): Promise<DedicatedPricingConfig> => {
+    const response = await apiClient.put<DedicatedPricingConfig>(
+      '/cabinet/admin/servers/dedicated/pricing/config',
+      data,
+    );
+    return response.data;
+  },
+
+  // GET /cabinet/dedicated-servers/script/{order_id}
+  getSetupScript: async (orderId: number): Promise<string> => {
+    try {
+      const response = await apiClient.get<string | { script?: string }>(
+        `/cabinet/dedicated-servers/script/${orderId}`,
+      );
+      if (typeof response.data === 'string') return response.data;
+      if (response.data && typeof response.data.script === 'string') return response.data.script;
+      return '';
+    } catch {
+      return '';
+    }
   },
 };

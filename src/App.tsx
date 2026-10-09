@@ -674,6 +674,26 @@ function App() {
           }
         />
         <Route
+          path="/servers/dedicated"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <DedicatedServers />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cabinet/servers/dedicated"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <DedicatedServers />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/servers/new"
           element={
             <ProtectedRoute>
@@ -685,6 +705,26 @@ function App() {
         />
         <Route
           path="/cabinet/servers/new"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <DedicatedServerOrder />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/servers/dedicated/new"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <DedicatedServerOrder />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cabinet/servers/dedicated/new"
           element={
             <ProtectedRoute>
               <LazyPage>

@@ -32,6 +32,24 @@ export default function DedicatedServers() {
   // Modals state
   const [activeQrServer, setActiveQrServer] = useState<DedicatedServerOrder | null>(null);
   const [activeScriptServer, setActiveScriptServer] = useState<DedicatedServerOrder | null>(null);
+  const [fetchedScript, setFetchedScript] = useState<string>('');
+  const [isLoadingScript, setIsLoadingScript] = useState<boolean>(false);
+
+  const handleOpenScript = async (server: DedicatedServerOrder) => {
+    setActiveScriptServer(server);
+    setFetchedScript(server.setup_script || '');
+    setIsLoadingScript(true);
+    try {
+      const script = await dedicatedServersApi.getSetupScript(server.id);
+      if (script) {
+        setFetchedScript(script);
+      }
+    } catch {
+      // Keep existing
+    } finally {
+      setIsLoadingScript(false);
+    }
+  };
 
   // Fetch servers
   const { data: servers = [], isLoading } = useQuery({
@@ -303,7 +321,7 @@ export default function DedicatedServers() {
                     {server.deployment_type === 'byos' && (
                       <button
                         type="button"
-                        onClick={() => setActiveScriptServer(server)}
+                        onClick={() => handleOpenScript(server)}
                         className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
                       >
                         <TerminalIcon className="h-3.5 w-3.5 text-warning-400" />
@@ -314,11 +332,11 @@ export default function DedicatedServers() {
                 )}
 
                 {/* For BYOS pending server, still allow viewing script if available */}
-                {isPending && server.deployment_type === 'byos' && server.setup_script && (
+                {isPending && server.deployment_type === 'byos' && (
                   <div className="pt-1">
                     <button
                       type="button"
-                      onClick={() => setActiveScriptServer(server)}
+                      onClick={() => handleOpenScript(server)}
                       className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
                     >
                       <TerminalIcon className="h-3.5 w-3.5 text-warning-400" />
@@ -418,10 +436,15 @@ export default function DedicatedServers() {
             </p>
 
             <div className="relative mb-4 rounded-xl border border-dark-700 bg-dark-900/90 p-3 font-mono text-xs text-dark-100">
-              <pre className="overflow-x-auto whitespace-pre-wrap break-all">
-                {activeScriptServer.setup_script ||
-                  `curl -sSL https://get.remnawave.com/agent.sh | bash -s -- --token order_${activeScriptServer.id}`}
-              </pre>
+              {isLoadingScript && !fetchedScript ? (
+                <div className="py-2 text-center text-dark-400">Загрузка команды...</div>
+              ) : (
+                <pre className="overflow-x-auto whitespace-pre-wrap break-all">
+                  {fetchedScript ||
+                    activeScriptServer.setup_script ||
+                    `curl -sSL https://get.remnawave.com/agent.sh | bash -s -- --token order_${activeScriptServer.id}`}
+                </pre>
+              )}
             </div>
 
             <div className="flex justify-end gap-2">
@@ -436,6 +459,7 @@ export default function DedicatedServers() {
                 type="button"
                 onClick={() => {
                   const cmd =
+                    fetchedScript ||
                     activeScriptServer.setup_script ||
                     `curl -sSL https://get.remnawave.com/agent.sh | bash -s -- --token order_${activeScriptServer.id}`;
                   handleCopy(cmd, 'Команда установки');
