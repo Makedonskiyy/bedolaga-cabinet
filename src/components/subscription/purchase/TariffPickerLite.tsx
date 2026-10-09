@@ -37,8 +37,15 @@ export function TariffPickerLite({
       ? t('subscription.free', 'Бесплатно')
       : `${formatAmount(kopeks / 100)} ${currencySymbol}`;
 
-  /** Цена строкой: посуточная, «от» за первый период либо гибкая оплата. */
+  /** Цена строкой: посуточная, за ГБ, «от» за первый период либо гибкая оплата. */
   const priceOf = (tariff: Tariff) => {
+    if (tariff.tariff_type === 'whitelist' || tariff.is_whitelist) {
+      const pricePerGb = tariff.traffic_price_per_gb_kopeks ?? 0;
+      return {
+        text: `${formatPrice(pricePerGb)} / ${t('common.units.gb', 'ГБ')}`,
+        was: null,
+      };
+    }
     const daily = dailyPriceQuote(tariff, applyPromoDiscount);
     if (daily) {
       return {
@@ -62,7 +69,11 @@ export function TariffPickerLite({
       tariff.device_limit === 0
         ? t('lite.tariff.unlimitedDevices', 'Устройств без ограничений')
         : t('subscription.devices', { count: tariff.device_limit });
-    return `${tariff.traffic_limit_label}, ${devices}`;
+    const trafficLabel =
+      tariff.tariff_type === 'whitelist' || tariff.is_whitelist
+        ? t('subscription.whitelistTrafficLabel', 'Оплата за трафик')
+        : tariff.traffic_limit_label;
+    return `${trafficLabel}, ${devices}`;
   };
 
   return (
@@ -85,6 +96,11 @@ export function TariffPickerLite({
                 <span className="truncate text-[16px] font-semibold text-dark-50">
                   {tariff.name}
                 </span>
+                {(tariff.tariff_type === 'whitelist' || tariff.is_whitelist) && (
+                  <span className="shrink-0 rounded border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-400">
+                    {t('subscription.whitelistBadge', 'Белые списки')}
+                  </span>
+                )}
                 {isCurrent && (
                   <span className="shrink-0 text-[13px] text-dark-400">
                     {t('lite.tariff.current', 'сейчас')}

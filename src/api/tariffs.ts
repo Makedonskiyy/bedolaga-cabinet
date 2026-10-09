@@ -35,6 +35,8 @@ export interface TariffListItem {
   show_in_gift: boolean;
   is_daily: boolean;
   daily_price_kopeks: number;
+  tariff_type?: 'standard' | 'whitelist' | 'daily' | string;
+  is_whitelist?: boolean;
   /** UUID продукта Lava для рекуррентных подписок (цена/период заданы в кабинете Lava) */
   lava_product_id?: string | null;
   /** Свой тег панельного пользователя Remnawave; null — общий тег из настроек */
@@ -93,6 +95,8 @@ export interface TariffDetail {
   // Дневной тариф
   is_daily: boolean;
   daily_price_kopeks: number;
+  tariff_type?: 'standard' | 'whitelist' | 'daily' | string;
+  is_whitelist?: boolean;
   /** UUID продукта Lava для рекуррентных подписок (цена/период заданы в кабинете Lava) */
   lava_product_id?: string | null;
   /** Свой тег панельного пользователя Remnawave; null — общий тег из настроек */
@@ -142,6 +146,8 @@ export interface TariffCreateRequest {
   // Дневной тариф
   is_daily?: boolean;
   daily_price_kopeks?: number;
+  tariff_type?: 'standard' | 'whitelist' | 'daily' | string;
+  is_whitelist?: boolean;
   // Автопродление Lava: продукт из кабинета Lava
   lava_product_id?: string | null;
   /** Свой тег панельного пользователя Remnawave; null — общий тег из настроек */
@@ -196,6 +202,8 @@ export interface TariffUpdateRequest {
   // Дневной тариф
   is_daily?: boolean;
   daily_price_kopeks?: number;
+  tariff_type?: 'standard' | 'whitelist' | 'daily' | string;
+  is_whitelist?: boolean;
   // Автопродление Lava: продукт из кабинета Lava
   lava_product_id?: string | null;
   /** Свой тег панельного пользователя Remnawave; null — общий тег из настроек */

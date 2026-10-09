@@ -16,7 +16,15 @@ import type { SupportConfig, TicketDetail } from '../types';
 import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
-import { ChatIcon, CloseIcon, ImageIcon, PlusIcon, SendIcon } from '@/components/icons';
+import {
+  ChatIcon,
+  CloseIcon,
+  ImageIcon,
+  MicrophoneIcon,
+  PlusIcon,
+  SendIcon,
+  XIcon,
+} from '@/components/icons';
 import { usePlatform } from '@/platform';
 import { linkifyText } from '../utils/linkify';
 import { resolveSupportContact } from '../utils/supportContact';
@@ -68,6 +76,8 @@ export default function Support() {
   // Media attachment states (multi-upload, up to 10)
   const [createAttachments, setCreateAttachments] = useState<MediaAttachment[]>([]);
   const [replyAttachments, setReplyAttachments] = useState<MediaAttachment[]>([]);
+  const [createVoiceFileId, setCreateVoiceFileId] = useState<string | null>(null);
+  const [isUploadingCreateVoice, setIsUploadingCreateVoice] = useState(false);
   const createFileInputRef = useRef<HTMLInputElement>(null);
   const replyFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,7 +95,25 @@ export default function Support() {
       if (a.preview) URL.revokeObjectURL(a.preview);
     });
     setCreateAttachments([]);
+    setCreateVoiceFileId(null);
     if (createFileInputRef.current) createFileInputRef.current.value = '';
+  };
+
+  const handleCreateVoice = async (audioBlob: Blob) => {
+    setIsUploadingCreateVoice(true);
+    setFormError(null);
+    try {
+      const extension = audioBlob.type.includes('ogg') ? 'ogg' : 'webm';
+      const uploadResult = await ticketsApi.uploadMedia(audioBlob, 'voice', `voice.${extension}`);
+      setCreateVoiceFileId(uploadResult.file_id);
+    } catch (err) {
+      log.error('Failed to upload voice for new ticket', err);
+      setFormError(
+        getApiErrorMessage(err, t('support.uploadFailed', 'Не удалось загрузить аудиозапись')),
+      );
+    } finally {
+      setIsUploadingCreateVoice(false);
+    }
   };
 
   const clearReplyAttachments = () => {
@@ -149,14 +177,25 @@ export default function Support() {
   const createMutation = useMutation({
     mutationFn: async () => {
       const ready = createAttachments.filter((a) => a.fileId) as Array<{ fileId: string }>;
-      const media =
-        ready.length > 0
-          ? {
-              media_type: 'photo',
-              media_file_id: ready[0].fileId,
-              media_items: ready.map((a) => ({ type: 'photo' as const, file_id: a.fileId })),
-            }
-          : undefined;
+      let media:
+        | {
+            media_type: 'photo' | 'voice';
+            media_file_id: string;
+            media_items?: Array<{ type: 'photo'; file_id: string }>;
+          }
+        | undefined;
+      if (createVoiceFileId) {
+        media = {
+          media_type: 'voice',
+          media_file_id: createVoiceFileId,
+        };
+      } else if (ready.length > 0) {
+        media = {
+          media_type: 'photo',
+          media_file_id: ready[0].fileId,
+          media_items: ready.map((a) => ({ type: 'photo' as const, file_id: a.fileId })),
+        };
+      }
       return ticketsApi.createTicket(newTitle, newMessage, media);
     },
     onSuccess: (ticket) => {
@@ -512,13 +551,13 @@ export default function Support() {
                     placeholder={t('support.messagePlaceholder')}
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    required
-                    minLength={10}
+                    required={!createVoiceFileId}
+                    minLength={createVoiceFileId ? 0 : 10}
                     maxLength={4000}
                   />
                 </div>
 
-                {/* Image attachments for create */}
+                {/* Attachments for create */}
                 <div>
                   <input
                     ref={createFileInputRef}
@@ -542,18 +581,43 @@ export default function Support() {
                       })
                     }
                   />
-                  {createAttachments.length < 10 && (
-                    <button
-                      type="button"
-                      onClick={() => createFileInputRef.current?.click()}
-                      disabled={createAttachments.some((a) => a.uploading)}
-                      className="mt-2 flex items-center gap-2 text-sm text-dark-400 transition-colors hover:text-dark-200 disabled:opacity-50"
-                    >
-                      <ImageIcon />
-                      {t('support.attachImage')}{' '}
-                      {createAttachments.length > 0 && `(${createAttachments.length}/10)`}
-                    </button>
-                  )}
+                  <div className="mt-2 flex flex-wrap items-center gap-4">
+                    {createAttachments.length < 10 && !createVoiceFileId && (
+                      <button
+                        type="button"
+                        onClick={() => createFileInputRef.current?.click()}
+                        disabled={
+                          createAttachments.some((a) => a.uploading) || isUploadingCreateVoice
+                        }
+                        className="flex items-center gap-2 text-sm text-dark-400 transition-colors hover:text-dark-200 disabled:opacity-50"
+                      >
+                        <ImageIcon />
+                        {t('support.attachImage')}{' '}
+                        {createAttachments.length > 0 && `(${createAttachments.length}/10)`}
+                      </button>
+                    )}
+                    {createAttachments.length === 0 && !createVoiceFileId && (
+                      <VoiceRecorder
+                        onSendVoice={handleCreateVoice}
+                        onError={(err) => setFormError(err)}
+                        disabled={createMutation.isPending || isUploadingCreateVoice}
+                      />
+                    )}
+                    {createVoiceFileId && (
+                      <div className="flex items-center gap-2 rounded-lg border border-dark-700/60 bg-dark-800/80 px-3 py-1.5 text-xs text-accent-400">
+                        <MicrophoneIcon className="h-4 w-4" />
+                        <span>{t('support.voiceAttached', 'Голосовое сообщение прикреплено')}</span>
+                        <button
+                          type="button"
+                          onClick={() => setCreateVoiceFileId(null)}
+                          className="ml-1 text-dark-400 hover:text-dark-200"
+                          title={t('common.delete', 'Удалить')}
+                        >
+                          <XIcon className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {formError && (
@@ -565,8 +629,12 @@ export default function Support() {
                 <div className="flex gap-3">
                   <Button
                     type="submit"
-                    disabled={createAttachments.some((a) => a.uploading)}
-                    loading={createMutation.isPending}
+                    disabled={
+                      (!newMessage.trim() && !createVoiceFileId) ||
+                      createAttachments.some((a) => a.uploading) ||
+                      isUploadingCreateVoice
+                    }
+                    loading={createMutation.isPending || isUploadingCreateVoice}
                   >
                     <SendIcon className="h-4 w-4" />
                     <span className="ml-2">{t('support.send')}</span>

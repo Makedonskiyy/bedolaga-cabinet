@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MicrophoneIcon, SendIcon, XIcon } from '@/components/icons';
+import { useNotify } from '@/platform/hooks/useNotify';
 import { cn } from '@/lib/utils';
 
 export interface VoiceRecorderProps {
@@ -38,6 +39,7 @@ export function VoiceRecorder({
   className,
 }: VoiceRecorderProps) {
   const { t } = useTranslation();
+  const notify = useNotify();
   const [isRecording, setIsRecording] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -47,6 +49,11 @@ export function VoiceRecorder({
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isCancelledRef = useRef(false);
+  const secondsRef = useRef(0);
+
+  useEffect(() => {
+    secondsRef.current = seconds;
+  }, [seconds]);
 
   // Clean up any ongoing stream or timer when unmounting
   useEffect(() => {
@@ -71,9 +78,17 @@ export function VoiceRecorder({
     }
     setIsRecording(false);
     setSeconds(0);
+    secondsRef.current = 0;
   }, []);
 
   const handleStopAndSend = useCallback(() => {
+    if (secondsRef.current < 5) {
+      notify.warning(
+        t('support.voiceMinDuration', 'Голосовое сообщение должно длиться не менее 5 секунд'),
+      );
+      handleCancel();
+      return;
+    }
     isCancelledRef.current = false;
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -82,7 +97,7 @@ export function VoiceRecorder({
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
-  }, []);
+  }, [handleCancel, notify, t]);
 
   const startRecording = async () => {
     if (disabled || isSending || isRecording) return;
@@ -119,9 +134,10 @@ export function VoiceRecorder({
           streamRef.current = null;
         }
 
-        if (isCancelledRef.current) {
+        if (isCancelledRef.current || secondsRef.current < 5) {
           setIsRecording(false);
           setSeconds(0);
+          secondsRef.current = 0;
           return;
         }
 
@@ -130,6 +146,7 @@ export function VoiceRecorder({
         audioChunksRef.current = [];
         setIsRecording(false);
         setSeconds(0);
+        secondsRef.current = 0;
 
         if (audioBlob.size > 0) {
           try {
@@ -181,6 +198,7 @@ export function VoiceRecorder({
   }
 
   if (isRecording) {
+    const isMinMet = seconds >= 5;
     return (
       <div className="flex items-center gap-2 rounded-lg border border-dark-700/60 bg-dark-800/80 px-2.5 py-1 text-sm">
         <span className="relative flex h-2.5 w-2.5">
@@ -201,8 +219,20 @@ export function VoiceRecorder({
         <button
           type="button"
           onClick={handleStopAndSend}
-          title={t('support.sendVoice', 'Отправить')}
-          className="rounded p-1 text-accent-400 transition-colors hover:text-accent-300 hover:bg-dark-700"
+          title={
+            isMinMet
+              ? t('support.sendVoice', 'Отправить')
+              : t(
+                  'support.voiceMinDuration',
+                  'Голосовое сообщение должно длиться не менее 5 секунд',
+                )
+          }
+          className={cn(
+            'rounded p-1 transition-colors',
+            isMinMet
+              ? 'text-accent-400 hover:text-accent-300 hover:bg-dark-700'
+              : 'text-error-400/80 hover:bg-dark-700',
+          )}
         >
           <SendIcon className="h-3.5 w-3.5" />
         </button>

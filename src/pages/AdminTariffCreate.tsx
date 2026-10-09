@@ -16,6 +16,7 @@ import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 import Twemoji from '@/lib/twemoji';
 import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 import {
+  ArrowDownIcon,
   CalendarIcon,
   CheckIcon,
   InfinityIcon,
@@ -26,7 +27,7 @@ import {
   TrashIcon,
 } from '@/components/icons';
 
-type TariffType = 'period' | 'daily' | null;
+type TariffType = 'period' | 'daily' | 'whitelist' | null;
 
 export default function AdminTariffCreate() {
   const { t } = useTranslation();
@@ -35,7 +36,7 @@ export default function AdminTariffCreate() {
   const queryClient = useQueryClient();
   const isEdit = !!id;
 
-  // Step: null = type selection, 'period' or 'daily' = form
+  // Step: null = type selection, 'period' | 'daily' | 'whitelist' = form
   const [tariffType, setTariffType] = useState<TariffType>(null);
 
   // Form state - matches bot fields
@@ -43,6 +44,9 @@ export default function AdminTariffCreate() {
   const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [trafficLimitGb, setTrafficLimitGb] = useState<number | ''>(100);
+  const [trafficPricePerGbKopeks, setTrafficPricePerGbKopeks] = useState<number | ''>(1000);
+  const [minTrafficGb, setMinTrafficGb] = useState<number | ''>(10);
+  const [maxTrafficGb, setMaxTrafficGb] = useState<number | ''>(500);
   const [deviceLimit, setDeviceLimit] = useState<number | ''>(1);
   const [devicePriceKopeks, setDevicePriceKopeks] = useState<number | ''>(0);
   const [maxDeviceLimit, setMaxDeviceLimit] = useState<number | ''>(0);
@@ -118,11 +122,20 @@ export default function AdminTariffCreate() {
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     select: useCallback((data: TariffDetail) => {
-      setTariffType(data.is_daily ? 'daily' : 'period');
+      if (data.tariff_type === 'whitelist' || data.is_whitelist) {
+        setTariffType('whitelist');
+      } else if (data.is_daily) {
+        setTariffType('daily');
+      } else {
+        setTariffType('period');
+      }
       setName(data.name);
       setDescription(data.description || '');
       setIsActive(data.is_active ?? true);
       setTrafficLimitGb(data.traffic_limit_gb ?? 100);
+      setTrafficPricePerGbKopeks(data.traffic_price_per_gb_kopeks ?? 1000);
+      setMinTrafficGb(data.min_traffic_gb ?? 10);
+      setMaxTrafficGb(data.max_traffic_gb ?? 500);
       setDeviceLimit(data.device_limit || 1);
       setDevicePriceKopeks(data.device_price_kopeks || 0);
       setMaxDeviceLimit(data.max_device_limit || 0);
@@ -169,6 +182,7 @@ export default function AdminTariffCreate() {
 
   const handleSubmit = () => {
     const isDaily = tariffType === 'daily';
+    const isWhitelist = tariffType === 'whitelist';
     const highlightPayload = isDaily ? null : highlightPeriodDays;
 
     // PATCH applies a field only when it is present in the payload, so empty
@@ -177,16 +191,26 @@ export default function AdminTariffCreate() {
     const data: TariffCreateRequest | TariffUpdateRequest = {
       name,
       description: isEdit ? description : description || undefined,
+      tariff_type: isWhitelist ? 'whitelist' : isDaily ? 'daily' : 'standard',
+      is_whitelist: isWhitelist,
       is_active: isActive,
       show_in_gift: showInGift,
       is_highlighted: isTariffHighlighted,
-      traffic_limit_gb: toNumber(trafficLimitGb, 100),
+      traffic_limit_gb: isWhitelist ? 0 : toNumber(trafficLimitGb, 100),
+      custom_traffic_enabled: isWhitelist ? true : undefined,
+      traffic_price_per_gb_kopeks: isWhitelist ? toNumber(trafficPricePerGbKopeks, 0) : undefined,
+      min_traffic_gb: isWhitelist ? toNumber(minTrafficGb, 10) : undefined,
+      max_traffic_gb: isWhitelist ? toNumber(maxTrafficGb, 500) : undefined,
       device_limit: toNumber(deviceLimit, 1),
       device_price_kopeks:
         toNumber(devicePriceKopeks) >= 0 ? toNumber(devicePriceKopeks) : undefined,
       max_device_limit: toNumber(maxDeviceLimit) > 0 ? toNumber(maxDeviceLimit) : undefined,
       tier_level: toNumber(tierLevel, 1),
-      period_prices: isDaily ? [] : periodPrices.filter((p) => p.price_kopeks >= 0),
+      period_prices: isDaily
+        ? []
+        : isWhitelist && periodPrices.length === 0
+          ? [{ days: 30, price_kopeks: 0 }]
+          : periodPrices.filter((p) => p.price_kopeks >= 0),
       // Выделение необязательно. На правке 0 — «снять выделение» (пустое поле
       // означало бы «не трогать»); на создании снимать нечего, и без отметки
       // поле не уходит — сервер отверг бы ноль.
@@ -282,8 +306,24 @@ export default function AdminTariffCreate() {
     isTierLevelValid &&
     toNumber(dailyPriceKopeks) > 0 &&
     hasTrafficPackages;
+  const isWhitelistValid =
+    isNameValid &&
+    isDeviceLimitValid &&
+    isTierLevelValid &&
+    trafficPricePerGbKopeks !== '' &&
+    toNumber(trafficPricePerGbKopeks) >= 0 &&
+    minTrafficGb !== '' &&
+    toNumber(minTrafficGb) > 0 &&
+    maxTrafficGb !== '' &&
+    toNumber(maxTrafficGb) >= toNumber(minTrafficGb);
   const isValid =
-    tariffType === 'period' ? isValidPeriod : tariffType === 'daily' ? isValidDaily : false;
+    tariffType === 'period'
+      ? isValidPeriod
+      : tariffType === 'daily'
+        ? isValidDaily
+        : tariffType === 'whitelist'
+          ? isWhitelistValid
+          : false;
 
   // Collect validation errors for display
   const validationErrors: string[] = [];
@@ -301,6 +341,17 @@ export default function AdminTariffCreate() {
   }
   if (tariffType === 'daily' && toNumber(dailyPriceKopeks) === 0) {
     validationErrors.push('dailyPriceRequired');
+  }
+  if (tariffType === 'whitelist') {
+    if (trafficPricePerGbKopeks === '' || toNumber(trafficPricePerGbKopeks) < 0) {
+      validationErrors.push('pricePerGbRequired');
+    }
+    if (minTrafficGb === '' || toNumber(minTrafficGb) <= 0) {
+      validationErrors.push('minTrafficGbRequired');
+    }
+    if (maxTrafficGb === '' || toNumber(maxTrafficGb) < toNumber(minTrafficGb)) {
+      validationErrors.push('maxTrafficGbInvalid');
+    }
   }
   if (trafficTopupEnabled && Object.keys(trafficTopupPackages).length === 0) {
     validationErrors.push('trafficPackagesRequired');
@@ -330,7 +381,7 @@ export default function AdminTariffCreate() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           <button
             onClick={() => setTariffType('period')}
             className="card group p-6 text-left transition-colors hover:border-accent-500/50"
@@ -340,8 +391,38 @@ export default function AdminTariffCreate() {
                 <CalendarIcon className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="font-medium text-dark-100">{t('admin.tariffs.periodTariff')}</h3>
-                <p className="mt-1 text-sm text-dark-400">{t('admin.tariffs.periodTariffDesc')}</p>
+                <h3 className="font-medium text-dark-100">
+                  {t('admin.tariffs.periodTariff', 'Обычный (периодический)')}
+                </h3>
+                <p className="mt-1 text-sm text-dark-400">
+                  {t('admin.tariffs.periodTariffDesc', 'Периодическая оплата (месяц, год и т.д.)')}
+                </p>
+              </div>
+            </div>
+          </button>
+          <button
+            onClick={() => {
+              setTariffType('whitelist');
+              if (periodPrices.length === 0) {
+                setPeriodPrices([{ days: 30, price_kopeks: 0 }]);
+              }
+            }}
+            className="card group p-6 text-left transition-colors hover:border-emerald-500/50"
+          >
+            <div className="flex items-center gap-4">
+              <div className="rounded-lg bg-emerald-500/20 p-3 text-emerald-400 group-hover:bg-emerald-500/30">
+                <ArrowDownIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-medium text-dark-100">
+                  {t('admin.tariffs.whitelistTariff', 'Белые списки (оплата за ГБ)')}
+                </h3>
+                <p className="mt-1 text-sm text-dark-400">
+                  {t(
+                    'admin.tariffs.whitelistTariffDesc',
+                    'Оплата только за трафик с выбором объёма ГБ',
+                  )}
+                </p>
               </div>
             </div>
           </button>
@@ -354,8 +435,12 @@ export default function AdminTariffCreate() {
                 <SunIcon className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="font-medium text-dark-100">{t('admin.tariffs.dailyTariff')}</h3>
-                <p className="mt-1 text-sm text-dark-400">{t('admin.tariffs.dailyTariffDesc')}</p>
+                <h3 className="font-medium text-dark-100">
+                  {t('admin.tariffs.dailyTariff', 'Дневной тариф')}
+                </h3>
+                <p className="mt-1 text-sm text-dark-400">
+                  {t('admin.tariffs.dailyTariffDesc', 'Ежедневное списание средств')}
+                </p>
               </div>
             </div>
           </button>
@@ -365,6 +450,7 @@ export default function AdminTariffCreate() {
   }
 
   const isDaily = tariffType === 'daily';
+  const isWhitelist = tariffType === 'whitelist';
 
   return (
     <div className="space-y-6">
@@ -374,10 +460,20 @@ export default function AdminTariffCreate() {
         <div className="flex items-center gap-3">
           <div
             className={`rounded-lg p-2 ${
-              isDaily ? 'bg-warning-500/20 text-warning-400' : 'bg-accent-500/20 text-accent-400'
+              isDaily
+                ? 'bg-warning-500/20 text-warning-400'
+                : isWhitelist
+                  ? 'bg-emerald-500/20 text-emerald-400'
+                  : 'bg-accent-500/20 text-accent-400'
             }`}
           >
-            {isDaily ? <SunIcon className="h-6 w-6" /> : <CalendarIcon className="h-6 w-6" />}
+            {isDaily ? (
+              <SunIcon className="h-6 w-6" />
+            ) : isWhitelist ? (
+              <ArrowDownIcon className="h-6 w-6" />
+            ) : (
+              <CalendarIcon className="h-6 w-6" />
+            )}
           </div>
           <div>
             <h1 className="text-xl font-bold text-dark-100">
@@ -385,10 +481,16 @@ export default function AdminTariffCreate() {
                 ? t('admin.tariffs.editTitle')
                 : isDaily
                   ? t('admin.tariffs.newDailyTitle')
-                  : t('admin.tariffs.newPeriodTitle')}
+                  : isWhitelist
+                    ? t('admin.tariffs.newWhitelistTitle', 'Новый тариф «Белые списки»')
+                    : t('admin.tariffs.newPeriodTitle')}
             </h1>
             <p className="text-sm text-dark-400">
-              {isDaily ? t('admin.tariffs.dailyDeduction') : t('admin.tariffs.periodPayment')}
+              {isDaily
+                ? t('admin.tariffs.dailyDeduction')
+                : isWhitelist
+                  ? t('admin.tariffs.whitelistDesc', 'Оплата только за ГБ трафика')
+                  : t('admin.tariffs.periodPayment')}
             </p>
           </div>
         </div>
@@ -425,6 +527,160 @@ export default function AdminTariffCreate() {
       {/* Content */}
       {activeTab === 'basic' && (
         <div className="card space-y-4">
+          {/* Tariff Type Switcher */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-dark-300">
+              {t('admin.tariffs.typeLabel', 'Тип тарифа')}
+            </label>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => setTariffType('period')}
+                className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                  tariffType === 'period'
+                    ? 'border-accent-500 bg-accent-500/15 text-accent-300'
+                    : 'border-dark-700 bg-dark-800/60 text-dark-400 hover:border-dark-600 hover:text-dark-200'
+                }`}
+              >
+                <div className="font-medium text-dark-200">
+                  {t('admin.tariffs.periodTariff', 'Обычный (периодический)')}
+                </div>
+                <div className="text-xs text-dark-500">
+                  {t('admin.tariffs.periodTariffDesc', 'Периодическая оплата')}
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTariffType('whitelist');
+                  if (periodPrices.length === 0) {
+                    setPeriodPrices([{ days: 30, price_kopeks: 0 }]);
+                  }
+                }}
+                className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                  tariffType === 'whitelist'
+                    ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                    : 'border-dark-700 bg-dark-800/60 text-dark-400 hover:border-dark-600 hover:text-dark-200'
+                }`}
+              >
+                <div className="font-medium text-dark-200">
+                  {t('admin.tariffs.whitelistTariff', 'Белые списки (оплата за ГБ)')}
+                </div>
+                <div className="text-xs text-dark-500">
+                  {t('admin.tariffs.whitelistTypeHint', 'Оплата только за трафик')}
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTariffType('daily')}
+                className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                  tariffType === 'daily'
+                    ? 'border-warning-500 bg-warning-500/15 text-warning-300'
+                    : 'border-dark-700 bg-dark-800/60 text-dark-400 hover:border-dark-600 hover:text-dark-200'
+                }`}
+              >
+                <div className="font-medium text-dark-200">
+                  {t('admin.tariffs.dailyTariff', 'Дневной')}
+                </div>
+                <div className="text-xs text-dark-500">
+                  {t('admin.tariffs.dailyTariffDesc', 'Ежедневное списание')}
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Whitelist traffic pricing fields */}
+          {isWhitelist && (
+            <div className="space-y-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+              <h3 className="text-sm font-semibold text-emerald-400">
+                {t('admin.tariffs.whitelistSettings', 'Настройки оплаты за ГБ')}
+              </h3>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <label
+                    htmlFor="whitelist-price"
+                    className="mb-2 block text-sm font-medium text-dark-200"
+                  >
+                    {t('admin.tariffs.pricePerGbLabel', 'Цена за 1 ГБ')}
+                    <span className="text-error-400">*</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="whitelist-price"
+                      type="number"
+                      value={trafficPricePerGbKopeks === '' ? '' : trafficPricePerGbKopeks / 100}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setTrafficPricePerGbKopeks('');
+                        } else {
+                          setTrafficPricePerGbKopeks(Math.max(0, parseFloat(val) || 0) * 100);
+                        }
+                      }}
+                      className="input w-full"
+                      min={0}
+                      step={0.1}
+                      placeholder="10"
+                    />
+                    <span className="shrink-0 text-dark-400">₽ / ГБ</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="whitelist-min-gb"
+                    className="mb-2 block text-sm font-medium text-dark-200"
+                  >
+                    {t('admin.tariffs.minTrafficLabel', 'Мин. ГБ')}
+                    <span className="text-error-400">*</span>
+                  </label>
+                  <input
+                    id="whitelist-min-gb"
+                    type="number"
+                    value={minTrafficGb}
+                    onChange={createNumberInputHandler(setMinTrafficGb, 1)}
+                    className="input w-full"
+                    min={1}
+                    step={1}
+                    placeholder="10"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="whitelist-max-gb"
+                    className="mb-2 block text-sm font-medium text-dark-200"
+                  >
+                    {t('admin.tariffs.maxTrafficLabel', 'Макс. ГБ')}
+                    <span className="text-error-400">*</span>
+                  </label>
+                  <input
+                    id="whitelist-max-gb"
+                    type="number"
+                    value={maxTrafficGb}
+                    onChange={createNumberInputHandler(setMaxTrafficGb, 1)}
+                    className="input w-full"
+                    min={1}
+                    step={1}
+                    placeholder="500"
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-dark-400">
+                {t(
+                  'admin.tariffs.whitelistPricingHint',
+                  'Пользователь выбирает объём трафика от {{min}} до {{max}} ГБ и платит динамически: объём × цена за ГБ.',
+                  {
+                    min: minTrafficGb || 10,
+                    max: maxTrafficGb || 500,
+                  },
+                )}
+              </p>
+            </div>
+          )}
+
           {/* Name */}
           <div>
             <label htmlFor="tariff-name" className="mb-2 block text-sm font-medium text-dark-300">
@@ -562,34 +818,36 @@ export default function AdminTariffCreate() {
             <p className="mt-2 text-xs text-dark-500">{t('admin.tariffs.trialDaysDesc')}</p>
           </div>
 
-          {/* Traffic Limit */}
-          <div>
-            <label
-              htmlFor="tariff-traffic-limit"
-              className="mb-2 block text-sm font-medium text-dark-300"
-            >
-              {t('admin.tariffs.trafficLimitLabel')}
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                id="tariff-traffic-limit"
-                type="number"
-                value={trafficLimitGb}
-                onChange={createNumberInputHandler(setTrafficLimitGb, 0)}
-                className="input w-32"
-                min={0}
-                placeholder="100"
-              />
-              <span className="text-dark-400">{t('admin.tariffs.gbUnit')}</span>
-              {(trafficLimitGb === 0 || trafficLimitGb === '') && (
-                <span className="flex items-center gap-1 text-sm text-success-500">
-                  <InfinityIcon className="h-4 w-4" />
-                  {t('admin.tariffs.unlimited')}
-                </span>
-              )}
+          {/* Traffic Limit (for period and daily tariffs) */}
+          {!isWhitelist && (
+            <div>
+              <label
+                htmlFor="tariff-traffic-limit"
+                className="mb-2 block text-sm font-medium text-dark-300"
+              >
+                {t('admin.tariffs.trafficLimitLabel')}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="tariff-traffic-limit"
+                  type="number"
+                  value={trafficLimitGb}
+                  onChange={createNumberInputHandler(setTrafficLimitGb, 0)}
+                  className="input w-32"
+                  min={0}
+                  placeholder="100"
+                />
+                <span className="text-dark-400">{t('admin.tariffs.gbUnit')}</span>
+                {(trafficLimitGb === 0 || trafficLimitGb === '') && (
+                  <span className="flex items-center gap-1 text-sm text-success-500">
+                    <InfinityIcon className="h-4 w-4" />
+                    {t('admin.tariffs.unlimited')}
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-dark-500">{t('admin.tariffs.trafficLimitHint')}</p>
             </div>
-            <p className="mt-1 text-xs text-dark-500">{t('admin.tariffs.trafficLimitHint')}</p>
-          </div>
+          )}
 
           {/* Device Limit */}
           <div>

@@ -157,7 +157,14 @@ export function TariffPickerGrid({
                 {tariff.is_highlighted && !isCurrentTariff && <BestValueBadge className="mb-2" />}
                 <div className="mb-3 flex items-start justify-between">
                   <div>
-                    <div className="text-lg font-semibold text-dark-100">{tariff.name}</div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-lg font-semibold text-dark-100">{tariff.name}</span>
+                      {(tariff.tariff_type === 'whitelist' || tariff.is_whitelist) && (
+                        <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">
+                          {t('subscription.whitelistBadge', 'Белые списки')}
+                        </span>
+                      )}
+                    </div>
                     {tariff.description && (
                       <div className="mt-1 whitespace-pre-line text-sm text-dark-400">
                         {tariff.description}
@@ -171,7 +178,11 @@ export function TariffPickerGrid({
                 <div className="flex flex-wrap gap-4 text-sm">
                   <div className="flex items-center gap-1.5">
                     <ArrowDownIcon className="h-4 w-4 text-accent-400" />
-                    <span className="font-medium text-dark-200">{tariff.traffic_limit_label}</span>
+                    <span className="font-medium text-dark-200">
+                      {tariff.tariff_type === 'whitelist' || tariff.is_whitelist
+                        ? t('subscription.whitelistTrafficLabel', 'Оплата за трафик')
+                        : tariff.traffic_limit_label}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <DevicesIcon className="h-4 w-4 text-dark-400" />
@@ -193,6 +204,17 @@ export function TariffPickerGrid({
                 {/* Price info */}
                 <div className="mt-3 border-t border-dark-700/50 pt-3 text-sm text-dark-400">
                   {(() => {
+                    if (tariff.tariff_type === 'whitelist' || tariff.is_whitelist) {
+                      const pricePerGb = tariff.traffic_price_per_gb_kopeks ?? 0;
+                      return (
+                        <span className="flex items-center gap-1.5">
+                          <span className="font-medium text-accent-400">
+                            {formatPrice(pricePerGb)}
+                          </span>
+                          <span>/ {t('common.units.gb', 'ГБ')}</span>
+                        </span>
+                      );
+                    }
                     const promoDaily = dailyPriceQuote(tariff, applyPromoDiscount);
                     if (promoDaily) {
                       return (

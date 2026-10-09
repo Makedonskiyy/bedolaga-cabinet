@@ -94,6 +94,10 @@ function SortableTariffCard({
                   <span className="rounded bg-warning-500/20 px-2 py-0.5 text-xs text-warning-400">
                     {t('admin.tariffs.dailyType')}
                   </span>
+                ) : tariff.tariff_type === 'whitelist' || tariff.is_whitelist ? (
+                  <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-400">
+                    {t('admin.tariffs.whitelistType', 'Белые списки')}
+                  </span>
                 ) : (
                   <span className="rounded bg-accent-500/20 px-2 py-0.5 text-xs text-accent-400">
                     {t('admin.tariffs.periodType')}

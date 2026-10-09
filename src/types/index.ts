@@ -338,6 +338,9 @@ export interface Tariff {
   custom_days_discount_percent?: number;
   // Traffic reset
   traffic_reset_mode?: string;
+  // Tariff type options
+  tariff_type?: 'standard' | 'whitelist' | 'daily' | string;
+  is_whitelist?: boolean;
   // Multi-tariff: already purchased by user
   is_purchased?: boolean;
 }

@@ -72,27 +72,40 @@ export function TariffPurchaseForm({
 
   // Form-internal state — seeded from the tariff prop. Resets via
   // `key={tariff.id}` on the parent's render.
+  const isDailyTariff =
+    tariff.is_daily || (tariff.daily_price_kopeks && tariff.daily_price_kopeks > 0);
+  const isWhitelistTariff = tariff.tariff_type === 'whitelist' || tariff.is_whitelist;
+
+  const minTrafficGb = tariff.min_traffic_gb ?? 5;
+  const maxTrafficGb = tariff.max_traffic_gb ?? 500;
+  const initialTrafficGb = isWhitelistTariff
+    ? Math.max(minTrafficGb, Math.min(maxTrafficGb, 50))
+    : 50;
+
   // Отмеченный оператором период выбран сразу: рамка «Выгодно» и итог внизу
   // должны говорить об одном и том же периоде.
   const [selectedTariffPeriod, setSelectedTariffPeriod] = useState<TariffPeriod | null>(
     pickBestValue(tariff.periods) || tariff.periods[0] || null,
   );
   const [customDays, setCustomDays] = useState<number>(30);
-  const [customTrafficGb, setCustomTrafficGb] = useState<number>(50);
+  const [customTrafficGb, setCustomTrafficGb] = useState<number>(initialTrafficGb);
   const [useCustomDays, setUseCustomDays] = useState(false);
   const [useCustomTraffic, setUseCustomTraffic] = useState(false);
 
   const purchaseMutation = useMutation({
     mutationFn: () => {
-      const isDailyTariff =
-        tariff.is_daily || (tariff.daily_price_kopeks && tariff.daily_price_kopeks > 0);
       const days = isDailyTariff
         ? 1
-        : useCustomDays
-          ? customDays
-          : selectedTariffPeriod?.days || 30;
-      const trafficGb =
-        useCustomTraffic && tariff.custom_traffic_enabled ? customTrafficGb : undefined;
+        : isWhitelistTariff
+          ? selectedTariffPeriod?.days || 30
+          : useCustomDays
+            ? customDays
+            : selectedTariffPeriod?.days || 30;
+      const trafficGb = isWhitelistTariff
+        ? customTrafficGb
+        : useCustomTraffic && tariff.custom_traffic_enabled
+          ? customTrafficGb
+          : undefined;
       // Forward the subscription_id when the user landed here via the
       // "Renew this subscription" flow (?subscriptionId=N). The backend
       // uses it to resolve the exact target row by ID, avoiding the
@@ -279,7 +292,7 @@ export function TariffPurchaseForm({
       </div>
 
       {/* Daily Tariff Purchase */}
-      {tariff.is_daily || (tariff.daily_price_kopeks && tariff.daily_price_kopeks > 0) ? (
+      {isDailyTariff ? (
         <div className="rounded-xl border border-accent-500/30 bg-accent-500/10 p-5">
           <div className="mb-4 text-center">
             <div className="mb-2 text-sm text-dark-400">
@@ -375,6 +388,138 @@ export function TariffPurchaseForm({
                       />
                     </div>
                   )}
+              </div>
+            );
+          })()}
+        </div>
+      ) : isWhitelistTariff ? (
+        <div className="space-y-6">
+          <div>
+            <div className="mb-3 text-sm text-dark-400">
+              {t('subscription.whitelist.selectTraffic', 'Выберите объем трафика')}
+            </div>
+            <div className="space-y-4 rounded-xl border border-dark-700/50 bg-dark-800/50 p-4">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-dark-200">
+                  {t('subscription.customTraffic.selectVolume', 'Объем трафика')}
+                </span>
+                <span className="text-sm font-medium text-accent-400">
+                  {formatPrice(tariff.traffic_price_per_gb_kopeks ?? 0)} /{' '}
+                  {t('common.units.gb', 'ГБ')}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min={minTrafficGb}
+                  max={maxTrafficGb}
+                  step={5}
+                  value={customTrafficGb}
+                  onChange={(e) => setCustomTrafficGb(parseInt(e.target.value) || minTrafficGb)}
+                  className="min-w-0 flex-1 accent-accent-500"
+                />
+                <div className="flex shrink-0 items-center gap-2">
+                  <input
+                    type="number"
+                    value={customTrafficGb}
+                    min={minTrafficGb}
+                    max={maxTrafficGb}
+                    step={5}
+                    onChange={(e) =>
+                      setCustomTrafficGb(
+                        Math.max(
+                          minTrafficGb,
+                          Math.min(maxTrafficGb, parseInt(e.target.value) || minTrafficGb),
+                        ),
+                      )
+                    }
+                    className="w-20 rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-center text-dark-100"
+                  />
+                  <span className="text-dark-400">{t('common.units.gb', 'ГБ')}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap justify-between gap-x-3 border-t border-dark-700/50 pt-3 text-sm text-dark-400">
+                <span>
+                  {customTrafficGb} {t('common.units.gb', 'ГБ')} ×{' '}
+                  {formatPrice(tariff.traffic_price_per_gb_kopeks ?? 0)}
+                </span>
+                <span className="font-medium text-accent-400">
+                  {formatPrice(customTrafficGb * (tariff.traffic_price_per_gb_kopeks ?? 0))}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Summary & Purchase */}
+          {(() => {
+            const pricePerGb = tariff.traffic_price_per_gb_kopeks ?? 0;
+            const totalPrice = customTrafficGb * pricePerGb;
+            const hasEnoughBalance = balanceKopeks !== undefined && totalPrice <= balanceKopeks;
+
+            return (
+              <div className="space-y-4 rounded-xl bg-dark-800/50 p-5">
+                <div className="flex flex-wrap justify-between gap-x-3 text-sm text-dark-300">
+                  <span>
+                    {t('subscription.traffic')}: {customTrafficGb} {t('common.units.gb', 'ГБ')}
+                  </span>
+                  <span>{formatPrice(totalPrice)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-dark-700/50 pt-3">
+                  <span className="font-medium text-dark-100">{t('subscription.total')}:</span>
+                  <span className="text-xl font-bold text-accent-400">
+                    {formatPrice(totalPrice)}
+                  </span>
+                </div>
+
+                <div className="pt-2">
+                  {balanceKopeks !== undefined && !hasEnoughBalance && (
+                    <InsufficientBalancePrompt
+                      missingAmountKopeks={totalPrice - balanceKopeks}
+                      compact
+                      className="mb-4"
+                    />
+                  )}
+
+                  <button
+                    onClick={() => purchaseMutation.mutate()}
+                    disabled={purchaseMutation.isPending}
+                    className="btn-primary w-full py-3"
+                  >
+                    {purchaseMutation.isPending ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        {t('common.loading')}
+                      </span>
+                    ) : (
+                      `${t('subscription.pay', 'Оплатить')} ${formatPrice(totalPrice)}`
+                    )}
+                  </button>
+
+                  {sbpPurchaseButton}
+                  {lavaPurchaseButton}
+                  {casheraPurchaseButton}
+
+                  {purchaseMutation.isError &&
+                    !getInsufficientBalanceError(purchaseMutation.error) && (
+                      <div className="mt-3 text-center text-sm text-error-400">
+                        {getErrorMessage(purchaseMutation.error)}
+                      </div>
+                    )}
+                  {purchaseMutation.isError &&
+                    getInsufficientBalanceError(purchaseMutation.error) && (
+                      <div className="mt-3">
+                        <InsufficientBalancePrompt
+                          missingAmountKopeks={
+                            getInsufficientBalanceError(purchaseMutation.error)?.missingAmount ||
+                            totalPrice - (balanceKopeks || 0)
+                          }
+                          compact
+                        />
+                      </div>
+                    )}
+                </div>
               </div>
             );
           })()}
