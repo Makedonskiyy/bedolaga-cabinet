@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MicrophoneIcon, SendIcon, XIcon } from '@/components/icons';
+import { PiMicrophoneFill, PiPaperPlaneRightFill, PiTrash } from 'react-icons/pi';
 import { useNotify } from '@/platform/hooks/useNotify';
 import { cn } from '@/lib/utils';
 
@@ -60,7 +60,9 @@ export function VoiceRecorder({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current.getTracks().forEach((track) => {
+          track.stop();
+        });
       }
     };
   }, []);
@@ -74,7 +76,9 @@ export function VoiceRecorder({
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     } else if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current.getTracks().forEach((track) => {
+        track.stop();
+      });
     }
     setIsRecording(false);
     setSeconds(0);
@@ -130,7 +134,9 @@ export function VoiceRecorder({
 
       mediaRecorder.onstop = async () => {
         if (streamRef.current) {
-          streamRef.current.getTracks().forEach((track) => track.stop());
+          streamRef.current.getTracks().forEach((track) => {
+            track.stop();
+          });
           streamRef.current = null;
         }
 
@@ -190,7 +196,7 @@ export function VoiceRecorder({
 
   if (isSending) {
     return (
-      <div className="flex items-center gap-2 text-xs text-dark-400">
+      <div className="inline-flex items-center gap-2.5 rounded-xl border border-accent-500/30 bg-accent-500/10 px-3.5 py-2 text-xs font-medium text-accent-300 backdrop-blur-xl">
         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
         <span>{t('support.sendingVoice', 'Отправка...')}</span>
       </div>
@@ -199,43 +205,78 @@ export function VoiceRecorder({
 
   if (isRecording) {
     const isMinMet = seconds >= 5;
+    const remainingToMin = Math.max(0, 5 - seconds);
+
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-dark-700/60 bg-dark-800/80 px-2.5 py-1 text-sm">
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-error-400 opacity-75" />
-          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-error-500" />
-        </span>
-        <span className="font-mono text-xs font-semibold text-error-400">
-          {formatSeconds(seconds)}
-        </span>
-        <button
-          type="button"
-          onClick={handleCancel}
-          title={t('common.cancel', 'Отменить')}
-          className="ml-1 rounded p-1 text-dark-400 transition-colors hover:text-dark-100 hover:bg-dark-700"
-        >
-          <XIcon className="h-3.5 w-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={handleStopAndSend}
-          title={
-            isMinMet
-              ? t('support.sendVoice', 'Отправить')
-              : t(
-                  'support.voiceMinDuration',
-                  'Голосовое сообщение должно длиться не менее 5 секунд',
-                )
-          }
-          className={cn(
-            'rounded p-1 transition-colors',
-            isMinMet
-              ? 'text-accent-400 hover:text-accent-300 hover:bg-dark-700'
-              : 'text-error-400/80 hover:bg-dark-700',
-          )}
-        >
-          <SendIcon className="h-3.5 w-3.5" />
-        </button>
+      <div className="inline-flex items-center gap-2.5 rounded-2xl border border-red-500/30 bg-red-950/25 px-3 py-1.5 text-sm backdrop-blur-2xl shadow-[0_0_20px_rgba(239,68,68,0.15)] animate-in fade-in zoom-in-95 duration-200">
+        {/* Pulsing Recording Dot */}
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]" />
+          </span>
+
+          {/* Live Timer */}
+          <span className="font-mono text-xs font-bold text-red-400 min-w-[38px] tracking-wider">
+            {formatSeconds(seconds)}
+          </span>
+        </div>
+
+        {/* Animated Waveform Visualizer */}
+        <div className="hidden items-center gap-1 h-4 px-1 sm:flex" aria-hidden="true">
+          {[5, 14, 9, 16, 7, 15, 11, 17, 8, 13, 10].map((h, i) => (
+            <span
+              key={i}
+              className="w-[2px] rounded-full bg-gradient-to-t from-red-500 to-red-300 animate-pulse"
+              style={{
+                height: `${h}px`,
+                animationDuration: `${0.45 + (i % 3) * 0.2}s`,
+                animationDelay: `${i * 0.07}s`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Min 5s Countdown Badge if under 5 seconds */}
+        {!isMinMet && (
+          <span className="hidden rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 sm:inline-flex">
+            ещё {remainingToMin}с
+          </span>
+        )}
+
+        <div className="flex items-center gap-1.5 ml-0.5">
+          {/* Cancel Button */}
+          <button
+            type="button"
+            onClick={handleCancel}
+            title={t('common.cancel', 'Отменить')}
+            className="flex h-7 w-7 items-center justify-center rounded-xl text-zinc-400 transition-colors hover:bg-white/10 hover:text-red-400 active:scale-95"
+          >
+            <PiTrash className="h-4 w-4" />
+          </button>
+
+          {/* Send Button */}
+          <button
+            type="button"
+            onClick={handleStopAndSend}
+            title={
+              isMinMet
+                ? t('support.sendVoice', 'Отправить')
+                : t(
+                    'support.voiceMinDuration',
+                    'Голосовое сообщение должно длиться не менее 5 секунд',
+                  )
+            }
+            className={cn(
+              'flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 active:scale-95',
+              isMinMet
+                ? 'bg-accent-500 text-black shadow-md hover:bg-accent-400 hover:scale-105'
+                : 'bg-white/10 text-zinc-400 hover:bg-white/15 hover:text-zinc-200',
+            )}
+          >
+            <PiPaperPlaneRightFill className="h-3.5 w-3.5 ml-0.5" />
+          </button>
+        </div>
       </div>
     );
   }
@@ -247,12 +288,16 @@ export function VoiceRecorder({
       disabled={disabled}
       title={t('support.recordVoice', 'Голосовое сообщение')}
       className={cn(
-        'flex items-center gap-2 text-sm text-dark-400 transition-colors hover:text-dark-200 disabled:opacity-50',
+        'group inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-zinc-300 backdrop-blur-xl transition-all duration-200 hover:border-white/20 hover:bg-white/[0.07] hover:text-white active:scale-95 disabled:opacity-50',
         className,
       )}
     >
-      <MicrophoneIcon className="h-4 w-4" />
-      <span className="hidden sm:inline">{t('support.recordVoice', 'Голосовое сообщение')}</span>
+      <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-accent-500/15 text-accent-400 group-hover:bg-accent-500/25 group-hover:scale-110 transition-all">
+        <PiMicrophoneFill className="h-3.5 w-3.5" />
+      </div>
+      <span className="font-medium tracking-wide">
+        {t('support.recordVoice', 'Голосовое сообщение')}
+      </span>
     </button>
   );
 }
