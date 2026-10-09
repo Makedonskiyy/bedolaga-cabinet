@@ -7937,6 +7937,9 @@
       "all": "All",
       "europe": "Europe",
       "america": "America",
+      "north_america": "America",
+      "south_america": "America",
+      "americas": "America",
       "asia": "Asia"
     },
     "deployment": {

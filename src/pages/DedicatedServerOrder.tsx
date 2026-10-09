@@ -85,6 +85,15 @@ function isMatchContinent(c: DedicatedCountry, tab: ContinentFilter) {
   return cont === tab;
 }
 
+function getContinentDisplay(continent?: string): string {
+  if (!continent) return '';
+  const c = continent.toLowerCase().trim();
+  if (c.includes('americ') || c === 'na' || c === 'sa') return 'Америка';
+  if (c.includes('europ') || c === 'eu') return 'Европа';
+  if (c.includes('asia') || c === 'as' || c === 'me') return 'Азия';
+  return continent;
+}
+
 export default function DedicatedServerOrder() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -230,25 +239,21 @@ export default function DedicatedServerOrder() {
       </div>
 
       <div className="space-y-8">
-        {/* Step 1: Country selection (Dropdown) */}
+        {/* Step 1: Country selection (Inline Expandable) */}
         <section>
-          <label
-            className="mb-3 block text-sm font-semibold sm:text-base"
-            style={{ color: g.text }}
-          >
+          <label className="mb-3 block text-sm font-semibold sm:text-base text-white">
             {t('dedicated.step.country', '1. Выберите страну размещения')}
           </label>
 
-          <div ref={countryDropdownRef} className="relative">
+          <div
+            ref={countryDropdownRef}
+            className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-2xl transition-all"
+          >
             <button
               type="button"
               onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
               aria-expanded={isCountryDropdownOpen}
-              className={`flex w-full items-center justify-between rounded-2xl border p-4 text-left backdrop-blur-2xl transition-all duration-200 ${
-                isCountryDropdownOpen
-                  ? 'border-accent-500/80 bg-accent-500/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)]'
-                  : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
-              }`}
+              className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-white/[0.02]"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-2xl leading-none">
@@ -256,27 +261,19 @@ export default function DedicatedServerOrder() {
                 </span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span
-                      className="truncate text-sm font-semibold sm:text-base"
-                      style={{ color: g.text }}
-                    >
+                    <span className="truncate text-sm font-semibold sm:text-base text-white">
                       {selectedCountry?.name || selectedCountryCode}
                     </span>
-                    <span className="rounded-md border border-white/10 bg-white/[0.05] px-1.5 py-0.5 text-xs text-dark-300">
+                    <span className="rounded-md border border-white/10 bg-white/[0.05] px-1.5 py-0.5 text-xs text-zinc-300">
                       {selectedCountryCode}
                     </span>
                   </div>
-                  <p className="text-xs text-dark-400 capitalize">
-                    {selectedCountry?.continent
-                      ? t(
-                          `dedicated.continents.${selectedCountry.continent}`,
-                          selectedCountry.continent,
-                        )
-                      : ''}
+                  <p className="text-xs text-zinc-400">
+                    {getContinentDisplay(selectedCountry?.continent)} • {selectedCountryCode}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-dark-400">
+              <div className="flex items-center gap-2 text-zinc-400">
                 <ChevronDownIcon
                   className={`h-5 w-5 transition-transform duration-200 ${
                     isCountryDropdownOpen ? 'rotate-180 text-accent-400' : ''
@@ -285,46 +282,36 @@ export default function DedicatedServerOrder() {
               </div>
             </button>
 
-            {/* Dropdown Menu */}
+            {/* In-flow Expandable list — never obscures Step 2 */}
             {isCountryDropdownOpen && (
-              <div
-                className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-white/10 shadow-2xl backdrop-blur-2xl"
-                style={{
-                  background: isDark ? 'rgba(20, 20, 26, 0.96)' : 'rgba(255, 255, 255, 0.96)',
-                }}
-              >
-                {/* Continent filter tabs inside dropdown */}
-                <div className="border-b border-white/[0.08] p-2.5">
-                  <div className="flex rounded-xl border border-white/[0.06] bg-black/40 p-1 text-xs backdrop-blur-md gap-1">
-                    {(
-                      [
-                        { id: 'all', label: t('dedicated.continents.all', 'Все') },
-                        { id: 'europe', label: t('dedicated.continents.europe', 'Европа') },
-                        { id: 'america', label: t('dedicated.continents.america', 'Америка') },
-                        { id: 'asia', label: t('dedicated.continents.asia', 'Азия') },
-                      ] as const
-                    ).map((tab) => (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setContinent(tab.id);
-                        }}
-                        className={`flex-1 rounded-lg py-1.5 font-medium text-center transition-all ${
-                          continent === tab.id
-                            ? 'bg-accent-500 text-black font-semibold'
-                            : 'text-dark-400 hover:text-white'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
+              <div className="border-t border-white/[0.08] p-3 space-y-3 bg-black/40">
+                {/* Continent filter tabs */}
+                <div className="flex rounded-xl border border-white/[0.06] bg-zinc-900/60 p-1 text-xs gap-1">
+                  {(
+                    [
+                      { id: 'all', label: t('dedicated.continents.all', 'Все') },
+                      { id: 'europe', label: t('dedicated.continents.europe', 'Европа') },
+                      { id: 'america', label: t('dedicated.continents.america', 'Америка') },
+                      { id: 'asia', label: t('dedicated.continents.asia', 'Азия') },
+                    ] as const
+                  ).map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setContinent(tab.id)}
+                      className={`flex-1 rounded-lg py-1.5 font-medium text-center transition-all ${
+                        continent === tab.id
+                          ? 'bg-accent-500 text-black font-semibold'
+                          : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </div>
 
                 {/* Country items */}
-                <div className="max-h-60 overflow-y-auto divide-y divide-white/[0.04] p-1.5">
+                <div className="max-h-60 overflow-y-auto divide-y divide-white/[0.04]">
                   {filteredCountries.map((c: DedicatedCountry) => {
                     const isSelected = selectedCountryCode === c.code;
                     return (
@@ -338,7 +325,7 @@ export default function DedicatedServerOrder() {
                         className={`flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left transition-colors ${
                           isSelected
                             ? 'bg-accent-500/15 text-accent-300 font-medium'
-                            : 'hover:bg-white/[0.06] text-dark-200'
+                            : 'hover:bg-white/[0.06] text-zinc-200'
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
@@ -346,11 +333,9 @@ export default function DedicatedServerOrder() {
                             {c.flag || getFlagEmoji(c.code) || '🌐'}
                           </span>
                           <div className="min-w-0">
-                            <div className="text-sm font-medium text-dark-100 truncate">
-                              {c.name}
-                            </div>
-                            <div className="text-xs text-dark-400 capitalize">
-                              {t(`dedicated.continents.${c.continent}`, c.continent)} • {c.code}
+                            <div className="text-sm font-medium text-white truncate">{c.name}</div>
+                            <div className="text-xs text-zinc-400">
+                              {getContinentDisplay(c.continent)} • {c.code}
                             </div>
                           </div>
                         </div>
@@ -363,7 +348,7 @@ export default function DedicatedServerOrder() {
                     );
                   })}
                   {filteredCountries.length === 0 && (
-                    <div className="py-6 text-center text-xs text-dark-400">
+                    <div className="py-6 text-center text-xs text-zinc-400">
                       {t('common.notFound', 'Ничего не найдено')}
                     </div>
                   )}
@@ -375,10 +360,7 @@ export default function DedicatedServerOrder() {
 
         {/* Step 2: Period selection */}
         <section>
-          <label
-            className="mb-3 block text-sm font-semibold sm:text-base"
-            style={{ color: g.text }}
-          >
+          <label className="mb-3 block text-sm font-semibold sm:text-base text-white">
             {t('dedicated.step.period', '2. Срок аренды')}
           </label>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -394,14 +376,14 @@ export default function DedicatedServerOrder() {
                   key={p.period_days}
                   type="button"
                   onClick={() => setSelectedPeriodDays(p.period_days)}
-                  className={`relative flex flex-col justify-between rounded-2xl border p-4 text-left backdrop-blur-xl transition-all duration-200 ${
+                  className={`relative flex flex-col justify-between rounded-2xl border p-4 text-left backdrop-blur-2xl transition-all duration-200 ${
                     isSelected
                       ? 'border-accent-500/80 bg-accent-500/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)]'
                       : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
                   }`}
                 >
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm font-semibold" style={{ color: g.text }}>
+                    <span className="text-sm font-semibold text-white">
                       {p.label || `${months} мес.`}
                     </span>
                     {p.discount_percent > 0 && (
@@ -415,7 +397,7 @@ export default function DedicatedServerOrder() {
                       {formatAmount(periodTotal)}&nbsp;{currencySymbol}
                     </div>
                     {months > 1 && (
-                      <div className="text-[11px] text-dark-400">
+                      <div className="text-[11px] text-zinc-400">
                         {formatAmount(Math.round(periodTotal / months))}&nbsp;{currencySymbol}/мес
                       </div>
                     )}
@@ -428,37 +410,50 @@ export default function DedicatedServerOrder() {
 
         {/* Step 3: Deployment type */}
         <section>
-          <label
-            className="mb-3 block text-sm font-semibold sm:text-base"
-            style={{ color: g.text }}
-          >
+          <label className="mb-3 block text-sm font-semibold sm:text-base text-white">
             {t('dedicated.step.deployment', '3. Тип развёртывания')}
           </label>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {/* Turnkey option */}
             <button
               type="button"
               onClick={() => setDeploymentType('turnkey')}
-              className={`flex items-start gap-3.5 rounded-2xl border p-4.5 text-left backdrop-blur-xl transition-all duration-200 ${
+              className={`group flex h-full flex-col justify-between rounded-2xl border p-4 text-left backdrop-blur-2xl transition-all duration-200 sm:p-5 ${
                 deploymentType === 'turnkey'
                   ? 'border-accent-500/80 bg-accent-500/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)]'
                   : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
               }`}
             >
-              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-500/15 text-accent-400">
-                <ServerIcon className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold" style={{ color: g.text }}>
-                    {t('dedicated.deployment.turnkey.title', 'Под ключ (Turnkey)')}
-                  </span>
-                  {deploymentType === 'turnkey' && (
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-500 text-black">
-                      <CheckIcon className="h-3 w-3 stroke-[3]" />
+              <div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                        deploymentType === 'turnkey'
+                          ? 'bg-accent-500/20 text-accent-400'
+                          : 'bg-white/[0.05] text-zinc-400 group-hover:text-white'
+                      }`}
+                    >
+                      <ServerIcon className="h-5 w-5" />
                     </div>
-                  )}
+                    <span className="truncate text-sm font-semibold text-white sm:text-base">
+                      {t('dedicated.deployment.turnkey.title', 'Под ключ (Turnkey)')}
+                    </span>
+                  </div>
+
+                  {/* Radio / Check indicator */}
+                  <div
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all ${
+                      deploymentType === 'turnkey'
+                        ? 'bg-accent-500 text-black'
+                        : 'border border-white/20 bg-white/[0.02]'
+                    }`}
+                  >
+                    {deploymentType === 'turnkey' && <CheckIcon className="h-3 w-3 stroke-[3]" />}
+                  </div>
                 </div>
-                <p className="mt-1 text-xs text-dark-400">
+
+                <p className="mt-3 text-xs leading-relaxed text-zinc-400">
                   {t(
                     'dedicated.deployment.turnkey.desc',
                     'Мы предоставим VPS и всё настроим за вас. Сервер готов к работе сразу после активации инженером.',
@@ -467,30 +462,46 @@ export default function DedicatedServerOrder() {
               </div>
             </button>
 
+            {/* BYOS option */}
             <button
               type="button"
               onClick={() => setDeploymentType('byos')}
-              className={`flex items-start gap-3.5 rounded-2xl border p-4.5 text-left backdrop-blur-xl transition-all duration-200 ${
+              className={`group flex h-full flex-col justify-between rounded-2xl border p-4 text-left backdrop-blur-2xl transition-all duration-200 sm:p-5 ${
                 deploymentType === 'byos'
                   ? 'border-accent-500/80 bg-accent-500/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)]'
                   : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]'
               }`}
             >
-              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-500/15 text-accent-400">
-                <CpuIcon className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold" style={{ color: g.text }}>
-                    {t('dedicated.deployment.byos.title', 'Свой сервер (BYOS)')}
-                  </span>
-                  {deploymentType === 'byos' && (
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-500 text-black">
-                      <CheckIcon className="h-3 w-3 stroke-[3]" />
+              <div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                        deploymentType === 'byos'
+                          ? 'bg-accent-500/20 text-accent-400'
+                          : 'bg-white/[0.05] text-zinc-400 group-hover:text-white'
+                      }`}
+                    >
+                      <CpuIcon className="h-5 w-5" />
                     </div>
-                  )}
+                    <span className="truncate text-sm font-semibold text-white sm:text-base">
+                      {t('dedicated.deployment.byos.title', 'Свой сервер (BYOS)')}
+                    </span>
+                  </div>
+
+                  {/* Radio / Check indicator */}
+                  <div
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all ${
+                      deploymentType === 'byos'
+                        ? 'bg-accent-500 text-black'
+                        : 'border border-white/20 bg-white/[0.02]'
+                    }`}
+                  >
+                    {deploymentType === 'byos' && <CheckIcon className="h-3 w-3 stroke-[3]" />}
+                  </div>
                 </div>
-                <p className="mt-1 text-xs text-dark-400">
+
+                <p className="mt-3 text-xs leading-relaxed text-zinc-400">
                   {t(
                     'dedicated.deployment.byos.desc',
                     'Используйте свой личный VPS. Мы предоставим команду для автоматического запуска и подключения.',
@@ -505,13 +516,13 @@ export default function DedicatedServerOrder() {
         <section>
           <div className="mb-3 flex items-center gap-2">
             <SparklesIcon className="h-4 w-4 text-accent-400" />
-            <label className="text-sm font-semibold sm:text-base" style={{ color: g.text }}>
+            <label className="text-sm font-semibold sm:text-base text-white">
               {t('dedicated.step.options', '4. Доп. опции')}
             </label>
           </div>
           <div className="space-y-2.5">
             {/* AI access option */}
-            <label className="flex cursor-pointer items-start gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-xl transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05]">
+            <label className="flex cursor-pointer items-start gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-2xl transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05]">
               <input
                 type="checkbox"
                 checked={aiAccess}
@@ -529,23 +540,23 @@ export default function DedicatedServerOrder() {
                 {aiAccess && <CheckIcon className="h-3.5 w-3.5 stroke-[3] text-black" />}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium" style={{ color: g.text }}>
+                <div className="text-sm font-medium text-white">
                   {t('dedicated.options.ai.title', 'Доступ ко всем заблокированным нейросетям')}
                 </div>
-                <p className="mt-0.5 text-xs text-dark-400">
+                <p className="mt-0.5 text-xs text-zinc-400">
                   {t(
                     'dedicated.options.ai.desc',
                     'Полный доступ к Gemini, ChatGPT, Claude, Perplexity без ограничений гео-локации.',
                   )}
                 </p>
               </div>
-              <span className="rounded-full border border-accent-500/30 bg-accent-500/15 px-2.5 py-0.5 text-xs font-semibold text-accent-400">
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-400">
                 {t('dedicated.options.included', 'Включено')}
               </span>
             </label>
 
             {/* YouTube no ads option */}
-            <label className="flex cursor-pointer items-start gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-xl transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05]">
+            <label className="flex cursor-pointer items-start gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-2xl transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05]">
               <input
                 type="checkbox"
                 checked={youtubeNoAds}
@@ -563,17 +574,17 @@ export default function DedicatedServerOrder() {
                 {youtubeNoAds && <CheckIcon className="h-3.5 w-3.5 stroke-[3] text-black" />}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium" style={{ color: g.text }}>
+                <div className="text-sm font-medium text-white">
                   {t('dedicated.options.youtube.title', 'YouTube без рекламы на всех устройствах')}
                 </div>
-                <p className="mt-0.5 text-xs text-dark-400">
+                <p className="mt-0.5 text-xs text-zinc-400">
                   {t(
                     'dedicated.options.youtube.desc',
                     'Фильтрация рекламных блоков на стороне сервера без необходимости сторонних расширений.',
                   )}
                 </p>
               </div>
-              <span className="rounded-full border border-accent-500/30 bg-accent-500/15 px-2.5 py-0.5 text-xs font-semibold text-accent-400">
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-400">
                 {t('dedicated.options.included', 'Включено')}
               </span>
             </label>
@@ -583,26 +594,26 @@ export default function DedicatedServerOrder() {
         {/* Summary Card & Payment */}
         <div
           className="rounded-3xl border border-white/[0.08] p-5 sm:p-6 backdrop-blur-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]"
-          style={{ background: isDark ? 'rgba(20, 20, 26, 0.6)' : 'rgba(255, 255, 255, 0.6)' }}
+          style={{ background: isDark ? 'rgba(12, 12, 16, 0.75)' : 'rgba(255, 255, 255, 0.75)' }}
         >
           <div className="mb-4 flex flex-col justify-between gap-2 border-b border-white/[0.08] pb-4 sm:flex-row sm:items-center">
             <div>
-              <div className="text-xs uppercase tracking-wider text-dark-400">
+              <div className="text-xs uppercase tracking-wider text-zinc-400">
                 {t('dedicated.summary.heading', 'Итоговый расчёт')}
               </div>
               <div className="mt-1 flex items-center gap-2">
                 <span className="text-lg">
                   {selectedCountry?.flag || getFlagEmoji(selectedCountryCode)}
                 </span>
-                <span className="font-semibold text-dark-100">
+                <span className="font-semibold text-white">
                   {selectedCountry?.name || selectedCountryCode}
                 </span>
-                <span className="text-dark-500">•</span>
-                <span className="text-sm text-dark-300">
+                <span className="text-zinc-500">•</span>
+                <span className="text-sm text-zinc-300">
                   {activePeriod.label || `${Math.round(selectedPeriodDays / 30)} мес.`}
                 </span>
-                <span className="text-dark-500">•</span>
-                <span className="text-xs text-dark-400">
+                <span className="text-zinc-500">•</span>
+                <span className="text-xs text-zinc-400">
                   {deploymentType === 'turnkey' ? 'Под ключ' : 'Свой VPS'}
                 </span>
               </div>
@@ -623,10 +634,10 @@ export default function DedicatedServerOrder() {
 
           {/* User balance status */}
           <div className="mb-4 flex items-center justify-between text-xs sm:text-sm">
-            <span className="text-dark-400">{t('balance.title', 'Ваш баланс')}:</span>
+            <span className="text-zinc-400">{t('balance.title', 'Ваш баланс')}:</span>
             <span
               className={`font-semibold ${
-                hasSufficientBalance ? 'text-dark-200' : 'text-error-400'
+                hasSufficientBalance ? 'text-zinc-200' : 'text-error-400'
               }`}
             >
               {formatAmount(userBalanceRubles)}&nbsp;{currencySymbol}
