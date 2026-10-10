@@ -461,7 +461,7 @@ export default function AdminDedicatedServers() {
                           </span>
                           {getStatusBadge(order.status)}
                           <span className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-xs font-bold text-white">
-                            {price ? `${price} ₽` : '—'}
+                            {price ? `${price}\u00A0₽` : '—'}
                           </span>
                           <span className="text-xs text-zinc-400">
                             {order.created_at ? new Date(order.created_at).toLocaleString() : ''}
