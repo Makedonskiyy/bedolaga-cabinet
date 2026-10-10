@@ -68,6 +68,7 @@ export interface DedicatedServerOrder {
   setup_script?: string | null;
   rejected_reason?: string | null;
   admin_notes?: string | null;
+  user_notes?: string | null;
   price_rubles?: number;
   price_kopeks?: number;
   created_at: string;
@@ -93,6 +94,16 @@ export interface AssignDedicatedOrderRequest {
   ip_address: string;
   squad_uuid: string;
   admin_notes?: string;
+  user_notes?: string;
+}
+
+export interface UpdateDedicatedOrderAdminRequest {
+  ip_address?: string;
+  squad_uuid?: string;
+  status?: string;
+  admin_notes?: string;
+  user_notes?: string;
+  expires_at?: string;
 }
 
 export interface RejectDedicatedOrderRequest {
@@ -110,12 +121,15 @@ export interface DedicatedPricingConfig {
     [key: string]: number | undefined;
   };
   country_prices_kopeks?: Record<string, number>;
+  option_prices_kopeks?: Record<string, number>;
+  option_prices_rubles?: Record<string, number>;
 }
 
 export interface UpdateDedicatedPricingRequest {
   base_monthly_price_kopeks: number;
   period_discounts: Record<string, number>;
   country_prices_kopeks?: Record<string, number>;
+  option_prices_kopeks?: Record<string, number>;
 }
 
 // Fallback configuration if backend config endpoint is not yet configured or returns partial data
@@ -295,6 +309,18 @@ export const dedicatedServersApi = {
   ): Promise<{ success: boolean; message?: string }> => {
     const response = await apiClient.post<{ success: boolean; message?: string }>(
       `/cabinet/admin/servers/dedicated/${orderId}/assign`,
+      data,
+    );
+    return response.data;
+  },
+
+  // PUT /cabinet/admin/servers/dedicated/{order_id}
+  updateOrderAdmin: async (
+    orderId: number,
+    data: UpdateDedicatedOrderAdminRequest,
+  ): Promise<{ success: boolean; message?: string }> => {
+    const response = await apiClient.put<{ success: boolean; message?: string }>(
+      `/cabinet/admin/servers/dedicated/${orderId}`,
       data,
     );
     return response.data;

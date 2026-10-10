@@ -28,6 +28,7 @@ import {
   PlusIcon,
   TrashIcon,
   CpuIcon,
+  EditIcon,
 } from '@/components/icons';
 
 type AdminMainTab = 'orders' | 'pricing';
@@ -50,11 +51,21 @@ export default function AdminDedicatedServers() {
   // Modals state
   const [assigningOrder, setAssigningOrder] = useState<DedicatedServerOrder | null>(null);
   const [rejectingOrder, setRejectingOrder] = useState<DedicatedServerOrder | null>(null);
+  const [editingOrder, setEditingOrder] = useState<DedicatedServerOrder | null>(null);
 
   // Form states for Assign
   const [ipAddress, setIpAddress] = useState('');
   const [squadUuid, setSquadUuid] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
+  const [userNotes, setUserNotes] = useState('');
+
+  // Form states for Edit / Management
+  const [editIpAddress, setEditIpAddress] = useState('');
+  const [editSquadUuid, setEditSquadUuid] = useState('');
+  const [editStatus, setEditStatus] = useState('active');
+  const [editAdminNotes, setEditAdminNotes] = useState('');
+  const [editUserNotes, setEditUserNotes] = useState('');
+  const [editExpiresAt, setEditExpiresAt] = useState('');
 
   // Form states for Reject
   const [rejectReason, setRejectReason] = useState('');
@@ -65,6 +76,8 @@ export default function AdminDedicatedServers() {
   const [discount90, setDiscount90] = useState<number>(10);
   const [discount180, setDiscount180] = useState<number>(15);
   const [discount365, setDiscount365] = useState<number>(22);
+  const [aiAccessPriceRubles, setAiAccessPriceRubles] = useState<number>(150);
+  const [youtubeNoAdsPriceRubles, setYoutubeNoAdsPriceRubles] = useState<number>(100);
   const [countryPrices, setCountryPrices] = useState<CountryPriceItem[]>([]);
   const [newCountryCode, setNewCountryCode] = useState('');
   const [newCountryPrice, setNewCountryPrice] = useState<number>(1490);
@@ -118,6 +131,22 @@ export default function AdminDedicatedServers() {
         setDiscount365(pricingData.period_discounts['365'] ?? 22);
       }
 
+      if (pricingData.option_prices_rubles) {
+        if (pricingData.option_prices_rubles.ai_access !== undefined) {
+          setAiAccessPriceRubles(pricingData.option_prices_rubles.ai_access);
+        }
+        if (pricingData.option_prices_rubles.youtube_no_ads !== undefined) {
+          setYoutubeNoAdsPriceRubles(pricingData.option_prices_rubles.youtube_no_ads);
+        }
+      } else if (pricingData.option_prices_kopeks) {
+        if (pricingData.option_prices_kopeks.ai_access !== undefined) {
+          setAiAccessPriceRubles(pricingData.option_prices_kopeks.ai_access / 100);
+        }
+        if (pricingData.option_prices_kopeks.youtube_no_ads !== undefined) {
+          setYoutubeNoAdsPriceRubles(pricingData.option_prices_kopeks.youtube_no_ads / 100);
+        }
+      }
+
       if (pricingData.country_prices_kopeks !== undefined) {
         const items: CountryPriceItem[] = Object.entries(pricingData.country_prices_kopeks).map(
           ([code, kopeks]) => ({
@@ -154,6 +183,7 @@ export default function AdminDedicatedServers() {
         ip_address: ipAddress.trim(),
         squad_uuid: squadUuid.trim(),
         admin_notes: adminNotes.trim() || undefined,
+        user_notes: userNotes.trim() || undefined,
       };
       return dedicatedServersApi.assignOrder(assigningOrder.id, payload);
     },
@@ -165,10 +195,36 @@ export default function AdminDedicatedServers() {
       setIpAddress('');
       setSquadUuid('');
       setAdminNotes('');
+      setUserNotes('');
       queryClient.invalidateQueries({ queryKey: ['admin-dedicated-servers'] });
     },
     onError: (err) => {
       notify.error(getApiErrorMessage(err, t('admin.dedicated.assignError', 'Ошибка активации')));
+    },
+  });
+
+  // Edit / Management mutation
+  const editOrderMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingOrder) throw new Error('No order selected');
+      return dedicatedServersApi.updateOrderAdmin(editingOrder.id, {
+        ip_address: editIpAddress.trim() || undefined,
+        squad_uuid: editSquadUuid.trim() || undefined,
+        status: editStatus,
+        admin_notes: editAdminNotes.trim() || undefined,
+        user_notes: editUserNotes.trim() || undefined,
+        expires_at: editExpiresAt ? new Date(editExpiresAt).toISOString() : undefined,
+      });
+    },
+    onSuccess: () => {
+      notify.success(t('admin.dedicated.editSuccess', 'Параметры сервера успешно обновлены!'));
+      setEditingOrder(null);
+      queryClient.invalidateQueries({ queryKey: ['admin-dedicated-servers'] });
+    },
+    onError: (err) => {
+      notify.error(
+        getApiErrorMessage(err, t('admin.dedicated.editError', 'Ошибка обновления сервера')),
+      );
     },
   });
 
@@ -215,6 +271,10 @@ export default function AdminDedicatedServers() {
           '180': Number(discount180) || 0,
           '365': Number(discount365) || 0,
         },
+        option_prices_kopeks: {
+          ai_access: Math.max(0, Math.round(Number(aiAccessPriceRubles) * 100)),
+          youtube_no_ads: Math.max(0, Math.round(Number(youtubeNoAdsPriceRubles) * 100)),
+        },
         country_prices_kopeks: countryPricesKopeks,
       });
     },
@@ -241,6 +301,17 @@ export default function AdminDedicatedServers() {
     setIpAddress(prefillIp);
     setSquadUuid(order.squad_uuid || '');
     setAdminNotes(order.admin_notes || '');
+    setUserNotes(order.user_notes || '');
+  };
+
+  const handleOpenEdit = (order: DedicatedServerOrder) => {
+    setEditingOrder(order);
+    setEditIpAddress(order.ip_address || order.options?.byos?.ip || '');
+    setEditSquadUuid(order.squad_uuid || '');
+    setEditStatus(order.status);
+    setEditAdminNotes(order.admin_notes || '');
+    setEditUserNotes(order.user_notes || '');
+    setEditExpiresAt(order.expires_at ? order.expires_at.slice(0, 10) : '');
   };
 
   const handleOpenReject = (order: DedicatedServerOrder) => {
@@ -605,6 +676,16 @@ export default function AdminDedicatedServers() {
 
                       {/* Right: Actions */}
                       <div className="flex flex-wrap items-center gap-2 self-end lg:self-center">
+                        {/* Always available: Edit / Management */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(order)}
+                          className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-zinc-200 transition-colors hover:border-white/20 hover:bg-white/[0.08]"
+                        >
+                          <EditIcon className="h-3.5 w-3.5 text-accent-400" />
+                          Управление
+                        </button>
+
                         {/* Pending -> "Взять в работу" */}
                         {isPending && (
                           <button
@@ -864,6 +945,60 @@ export default function AdminDedicatedServers() {
                 </div>
               </div>
 
+              {/* VIP Addon Options Pricing */}
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-zinc-300">
+                  Цены на дополнительные опции (₽ / месяц)
+                </label>
+                <p className="mb-3 text-xs text-zinc-400">
+                  Стоимость опций прибавляется к заказу пропорционально количеству месяцев аренды.
+                </p>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <SparklesIcon className="h-4 w-4 text-accent-400" />
+                      <span className="text-xs font-semibold text-white">
+                        Доступ к нейросетям (AI Access)
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={aiAccessPriceRubles}
+                        onChange={(e) => setAiAccessPriceRubles(Number(e.target.value))}
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-sm font-bold text-white focus:border-accent-500 focus:outline-none"
+                      />
+                      <span className="absolute right-3.5 top-2.5 text-xs font-semibold text-zinc-400">
+                        ₽ / мес
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShieldIcon className="h-4 w-4 text-accent-400" />
+                      <span className="text-xs font-semibold text-white">
+                        YouTube без рекламы (No Ads)
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={youtubeNoAdsPriceRubles}
+                        onChange={(e) => setYoutubeNoAdsPriceRubles(Number(e.target.value))}
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-sm font-bold text-white focus:border-accent-500 focus:outline-none"
+                      />
+                      <span className="absolute right-3.5 top-2.5 text-xs font-semibold text-zinc-400">
+                        ₽ / мес
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Submit Button */}
               <div className="pt-4 border-t border-white/[0.08]">
                 <button
@@ -1017,13 +1152,27 @@ export default function AdminDedicatedServers() {
               {/* Admin Notes */}
               <div>
                 <label className="mb-1 block text-xs font-semibold text-zinc-300">
-                  Заметки администратора (опционально)
+                  Заметки администратора (внутренние, клиент не видит)
                 </label>
                 <textarea
                   rows={2}
                   placeholder="Например: Сервер Франкфурт Hetzner..."
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-xs text-white placeholder-zinc-600 focus:border-accent-500 focus:outline-none"
+                />
+              </div>
+
+              {/* User Notes */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-zinc-300">
+                  Инструкция и данные для клиента (будут видны пользователю в деталях сервера)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Например: Данные для SSH/панели, порты, DNS..."
+                  value={userNotes}
+                  onChange={(e) => setUserNotes(e.target.value)}
                   className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-xs text-white placeholder-zinc-600 focus:border-accent-500 focus:outline-none"
                 />
               </div>
@@ -1056,6 +1205,164 @@ export default function AdminDedicatedServers() {
                 >
                   <CheckIcon className="h-4 w-4" />
                   {assignMutation.isPending ? 'Активация...' : 'Активировать и выдать клиенту'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit / Management Modal */}
+      {editingOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-zinc-900 p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-white">
+                  Управление сервером #{editingOrder.id}
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  {editingOrder.country_name || editingOrder.country_code} •{' '}
+                  {editingOrder.deployment_type === 'turnkey' ? 'Под ключ' : 'BYOS'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingOrder(null)}
+                className="text-zinc-400 hover:text-white"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                editOrderMutation.mutate();
+              }}
+              className="space-y-4"
+            >
+              {/* Status */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-zinc-300">
+                  Статус заказа
+                </label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-xs text-zinc-200 focus:border-accent-500 focus:outline-none"
+                >
+                  <option value="pending">Ожидает (pending)</option>
+                  <option value="setting_up">В настройке (setting_up)</option>
+                  <option value="active">Активен (active)</option>
+                  <option value="expired">Истёк (expired)</option>
+                  <option value="rejected">Отклонён (rejected)</option>
+                </select>
+              </div>
+
+              {/* IP Address */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-zinc-300">
+                  Выделенный IP
+                </label>
+                <input
+                  type="text"
+                  placeholder="195.201.55.99"
+                  value={editIpAddress}
+                  onChange={(e) => setEditIpAddress(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 font-mono text-xs text-white placeholder-zinc-600 focus:border-accent-500 focus:outline-none"
+                />
+              </div>
+
+              {/* RemnaWave Squad Selection */}
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-zinc-300">
+                    RemnaWave Squad UUID (переключение сквада переместит подписку)
+                  </label>
+                  {squads.length > 0 && (
+                    <span className="text-[11px] text-zinc-500">Сквадов: {squads.length}</span>
+                  )}
+                </div>
+                {squads.length > 0 && (
+                  <select
+                    value={editSquadUuid}
+                    onChange={(e) => setEditSquadUuid(e.target.value)}
+                    className="mb-2 w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-xs text-zinc-200 focus:border-accent-500 focus:outline-none"
+                  >
+                    <option value="">— Выберите из списка или введите вручную ниже —</option>
+                    {squads.map((s) => (
+                      <option key={s.uuid} value={s.uuid}>
+                        {s.display_name || s.name} ({s.uuid})
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <input
+                  type="text"
+                  placeholder="f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                  value={editSquadUuid}
+                  onChange={(e) => setEditSquadUuid(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 font-mono text-xs text-white placeholder-zinc-600 focus:border-accent-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Expires At */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-zinc-300">
+                  Дата окончания аренды (expires_at)
+                </label>
+                <input
+                  type="date"
+                  value={editExpiresAt}
+                  onChange={(e) => setEditExpiresAt(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-xs text-white focus:border-accent-500 focus:outline-none"
+                />
+              </div>
+
+              {/* User Notes */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-zinc-300">
+                  Инструкция / Заметки для клиента (видны клиенту в деталях сервера)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Инструкции, данные для доступа, порты..."
+                  value={editUserNotes}
+                  onChange={(e) => setEditUserNotes(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-xs text-white placeholder-zinc-600 focus:border-accent-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Admin Notes */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-zinc-300">
+                  Внутренние заметки администратора (клиент не видит)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Технические заметки инженера..."
+                  value={editAdminNotes}
+                  onChange={(e) => setEditAdminNotes(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-xs text-white placeholder-zinc-600 focus:border-accent-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingOrder(null)}
+                  className="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-white/[0.05]"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  disabled={editOrderMutation.isPending}
+                  className="flex items-center gap-1.5 rounded-xl bg-accent-500 px-5 py-2 text-xs font-semibold text-black hover:bg-accent-400 disabled:opacity-50"
+                >
+                  <CheckIcon className="h-4 w-4" />
+                  {editOrderMutation.isPending ? 'Сохранение...' : 'Сохранить изменения'}
                 </button>
               </div>
             </form>

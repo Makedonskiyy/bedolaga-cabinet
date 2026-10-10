@@ -20,6 +20,8 @@ import {
   SparklesIcon,
   XIcon,
   TerminalIcon,
+  InfoIcon,
+  ChatIcon,
 } from '@/components/icons';
 
 export default function DedicatedServers() {
@@ -32,6 +34,9 @@ export default function DedicatedServers() {
   // Modals state
   const [activeQrServer, setActiveQrServer] = useState<DedicatedServerOrder | null>(null);
   const [activeScriptServer, setActiveScriptServer] = useState<DedicatedServerOrder | null>(null);
+  const [selectedDetailServer, setSelectedDetailServer] = useState<DedicatedServerOrder | null>(
+    null,
+  );
   const [fetchedScript, setFetchedScript] = useState<string>('');
   const [isLoadingScript, setIsLoadingScript] = useState<boolean>(false);
 
@@ -286,54 +291,53 @@ export default function DedicatedServers() {
                   </div>
                 </div>
 
-                {/* Actions row for Active servers */}
-                {isActive && (
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    {/* Copy subscription URL */}
-                    {server.subscription_url && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (server.subscription_url) {
-                            handleCopy(server.subscription_url, 'Ссылка на подписку');
-                          }
-                        }}
-                        className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
-                      >
-                        <CopyIcon className="h-3.5 w-3.5 text-accent-400" />
-                        {t('dedicated.actions.copySub', 'Скопировать ссылку подписки')}
-                      </button>
-                    )}
+                {/* Actions row */}
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {/* Details / Info button */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDetailServer(server)}
+                    className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
+                  >
+                    <InfoIcon className="h-3.5 w-3.5 text-accent-400" />
+                    {t('dedicated.actions.details', 'Детали сервера')}
+                  </button>
 
-                    {/* QR code modal button */}
-                    {server.subscription_url && (
-                      <button
-                        type="button"
-                        onClick={() => setActiveQrServer(server)}
-                        className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
-                      >
-                        <QrCodeIcon className="h-3.5 w-3.5 text-accent-400" />
-                        {t('dedicated.actions.qr', 'QR-код')}
-                      </button>
-                    )}
+                  {/* Actions for Active servers */}
+                  {isActive && (
+                    <>
+                      {/* Copy subscription URL */}
+                      {server.subscription_url && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (server.subscription_url) {
+                              handleCopy(server.subscription_url, 'Ссылка на подписку');
+                            }
+                          }}
+                          className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
+                        >
+                          <CopyIcon className="h-3.5 w-3.5 text-accent-400" />
+                          {t('dedicated.actions.copySub', 'Скопировать ссылку')}
+                        </button>
+                      )}
 
-                    {/* BYOS Setup Script button */}
-                    {server.deployment_type === 'byos' && (
-                      <button
-                        type="button"
-                        onClick={() => handleOpenScript(server)}
-                        className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
-                      >
-                        <TerminalIcon className="h-3.5 w-3.5 text-warning-400" />
-                        {t('dedicated.actions.setupCommand', 'Команда установки')}
-                      </button>
-                    )}
-                  </div>
-                )}
+                      {/* QR code modal button */}
+                      {server.subscription_url && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveQrServer(server)}
+                          className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
+                        >
+                          <QrCodeIcon className="h-3.5 w-3.5 text-accent-400" />
+                          {t('dedicated.actions.qr', 'QR-код')}
+                        </button>
+                      )}
+                    </>
+                  )}
 
-                {/* For BYOS pending server, still allow viewing script if available */}
-                {isPending && server.deployment_type === 'byos' && (
-                  <div className="pt-1">
+                  {/* BYOS Setup Script button */}
+                  {server.deployment_type === 'byos' && (
                     <button
                       type="button"
                       onClick={() => handleOpenScript(server)}
@@ -342,11 +346,182 @@ export default function DedicatedServers() {
                       <TerminalIcon className="h-3.5 w-3.5 text-warning-400" />
                       {t('dedicated.actions.setupCommand', 'Команда установки')}
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Server Details Modal */}
+      {selectedDetailServer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-950/75 p-4 backdrop-blur-sm">
+          <div
+            className="w-full max-w-lg rounded-2xl border p-6 shadow-2xl"
+            style={{ background: g.cardBg, borderColor: g.cardBorder }}
+          >
+            {/* Modal Header */}
+            <div className="mb-4 flex items-center justify-between border-b border-dark-700/50 pb-3">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl leading-none">
+                  {selectedDetailServer.flag ||
+                    getFlagEmoji(selectedDetailServer.country_code) ||
+                    '🌐'}
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-semibold text-dark-100">
+                      {selectedDetailServer.country_name || selectedDetailServer.country_code}
+                    </h3>
+                    <span className="rounded bg-dark-700/60 px-1.5 py-0.5 text-xs text-dark-300">
+                      #{selectedDetailServer.id}
+                    </span>
+                  </div>
+                  <span className="text-xs text-dark-400">
+                    {selectedDetailServer.deployment_type === 'turnkey'
+                      ? t('dedicated.deployment.turnkey.label', 'Под ключ (Triton VPS)')
+                      : t('dedicated.deployment.byos.label', 'Свой сервер (BYOS)')}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {getStatusBadge(selectedDetailServer.status)}
+                <button
+                  type="button"
+                  onClick={() => setSelectedDetailServer(null)}
+                  className="rounded-lg p-1 text-dark-400 hover:bg-dark-800 hover:text-dark-200"
+                >
+                  <XIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Server Specs & Info */}
+            <div className="mb-4 space-y-2.5 text-sm">
+              <div className="flex items-center justify-between rounded-xl bg-dark-800/40 px-3.5 py-2.5">
+                <span className="text-xs text-dark-400">
+                  {t('dedicated.params.ip', 'Выделенный IP')}
+                </span>
+                <span className="font-mono text-xs font-semibold text-dark-200">
+                  {selectedDetailServer.ip_address || (
+                    <span className="text-dark-500">
+                      {selectedDetailServer.status === 'pending' ||
+                      selectedDetailServer.status === 'setting_up'
+                        ? t('dedicated.params.assigning', 'Назначается администратором...')
+                        : '—'}
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between rounded-xl bg-dark-800/40 px-3.5 py-2.5">
+                <span className="text-xs text-dark-400">
+                  {t('dedicated.params.period', 'Срок действия')}
+                </span>
+                <span className="text-xs font-medium text-dark-200">
+                  {selectedDetailServer.expires_at ? (
+                    new Date(selectedDetailServer.expires_at).toLocaleDateString()
+                  ) : (
+                    <span>{selectedDetailServer.period_days} дней</span>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between rounded-xl bg-dark-800/40 px-3.5 py-2.5">
+                <span className="text-xs text-dark-400">
+                  {t('dedicated.params.options', 'Подключённые опции')}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  {selectedDetailServer.options?.ai_access && (
+                    <span className="inline-flex items-center gap-1 rounded bg-accent-500/15 px-2 py-0.5 text-xs font-medium text-accent-400">
+                      <SparklesIcon className="h-3 w-3" />
+                      AI Доступ
+                    </span>
+                  )}
+                  {selectedDetailServer.options?.youtube_no_ads && (
+                    <span className="inline-flex items-center gap-1 rounded bg-accent-500/15 px-2 py-0.5 text-xs font-medium text-accent-400">
+                      <ShieldIcon className="h-3 w-3" />
+                      YouTube без рекламы
+                    </span>
+                  )}
+                  {!selectedDetailServer.options?.ai_access &&
+                    !selectedDetailServer.options?.youtube_no_ads && (
+                      <span className="text-xs text-dark-400">—</span>
+                    )}
+                </div>
+              </div>
+            </div>
+
+            {/* Engineer / Admin Notes if provided */}
+            {selectedDetailServer.user_notes && (
+              <div className="mb-4 rounded-xl border border-accent-500/30 bg-accent-500/10 p-4 text-left">
+                <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-accent-400">
+                  <InfoIcon className="h-3.5 w-3.5" />
+                  {t(
+                    'dedicated.details.adminNotesTitle',
+                    'Информация и инструкции от администратора',
+                  )}
+                </div>
+                <div className="mt-2 whitespace-pre-wrap font-sans text-xs leading-relaxed text-dark-200">
+                  {selectedDetailServer.user_notes}
+                </div>
+              </div>
+            )}
+
+            {/* Active Subscription Actions */}
+            {selectedDetailServer.status.toLowerCase() === 'active' &&
+              selectedDetailServer.subscription_url && (
+                <div className="mb-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedDetailServer.subscription_url) {
+                        handleCopy(selectedDetailServer.subscription_url, 'Ссылка подписки');
+                      }
+                    }}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/80 py-2.5 text-xs font-semibold text-dark-200 hover:border-dark-600 hover:bg-dark-700"
+                  >
+                    <CopyIcon className="h-3.5 w-3.5 text-accent-400" />
+                    {t('dedicated.actions.copySub', 'Скопировать ссылку')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const s = selectedDetailServer;
+                      setSelectedDetailServer(null);
+                      setActiveQrServer(s);
+                    }}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/80 py-2.5 text-xs font-semibold text-dark-200 hover:border-dark-600 hover:bg-dark-700"
+                  >
+                    <QrCodeIcon className="h-3.5 w-3.5 text-accent-400" />
+                    {t('dedicated.actions.qr', 'QR-код')}
+                  </button>
+                </div>
+              )}
+
+            {/* Support button & close */}
+            <div className="flex flex-col gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDetailServer(null);
+                  navigate('/support');
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 py-3 text-xs font-semibold text-on-accent transition-colors hover:bg-accent-600"
+              >
+                <ChatIcon className="h-4 w-4" />
+                {t('dedicated.details.supportBtn', 'Написать в поддержку по серверу')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedDetailServer(null)}
+                className="w-full rounded-xl border border-dark-700 py-2 text-xs font-semibold text-dark-400 transition-colors hover:bg-dark-800 hover:text-dark-200"
+              >
+                {t('common.close', 'Закрыть')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -362,7 +537,6 @@ export default function DedicatedServers() {
                 <h3 className="text-base font-semibold text-dark-100">
                   {t('dedicated.qr.title', 'QR-код подключения')}
                 </h3>
-                <p className="text-xs text-dark-400">Happ, v2rayNG, Hiddify, Streisand</p>
               </div>
               <button
                 type="button"
@@ -431,7 +605,7 @@ export default function DedicatedServers() {
             <p className="mb-3 text-xs text-dark-300">
               {t(
                 'dedicated.byos.modalDesc',
-                'Подключитесь к вашему VPS по SSH под пользователем root и выполните следующую команду:',
+                'Выполните команду на чистом сервере Ubuntu/Debian под пользователем root. Скрипт установит Docker, оптимизирует сеть (BBR), настроит фаервол (UFW) и подключит ноду к защищённой сети Triton:',
               )}
             </p>
 

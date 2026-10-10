@@ -194,19 +194,70 @@ export default function DedicatedServerOrder() {
     return found || { period_days: selectedPeriodDays, discount_percent: 0, label: '1 месяц' };
   }, [periods, selectedPeriodDays]);
 
+  // Addon option prices from config (supports option_prices_rubles, array options or object options)
+  const aiPriceMonthly = useMemo(() => {
+    if (config?.option_prices_rubles?.ai_access !== undefined) {
+      return config.option_prices_rubles.ai_access;
+    }
+    const rawOpts = config?.options;
+    if (Array.isArray(rawOpts)) {
+      const opt = rawOpts.find((o) => o?.id === 'ai_access');
+      return opt?.price_rubles ?? 0;
+    }
+    if (rawOpts && typeof rawOpts === 'object') {
+      const opt = (rawOpts as Record<string, any>)['ai_access'];
+      return opt?.price_rubles ?? 0;
+    }
+    return 0;
+  }, [config]);
+
+  const youtubePriceMonthly = useMemo(() => {
+    if (config?.option_prices_rubles?.youtube_no_ads !== undefined) {
+      return config.option_prices_rubles.youtube_no_ads;
+    }
+    const rawOpts = config?.options;
+    if (Array.isArray(rawOpts)) {
+      const opt = rawOpts.find((o) => o?.id === 'youtube_no_ads');
+      return opt?.price_rubles ?? 0;
+    }
+    if (rawOpts && typeof rawOpts === 'object') {
+      const opt = (rawOpts as Record<string, any>)['youtube_no_ads'];
+      return opt?.price_rubles ?? 0;
+    }
+    return 0;
+  }, [config]);
+
   // Price calculations
   const calculatePrice = useMemo(() => {
     const months = Math.max(1, Math.round(selectedPeriodDays / 30));
-    const rawTotal = effectiveBasePriceRubles * months;
-    const discount = (rawTotal * (activePeriod.discount_percent || 0)) / 100;
-    const total = Math.round(rawTotal - discount);
+    const rawServerTotal = effectiveBasePriceRubles * months;
+    const discount = (rawServerTotal * (activePeriod.discount_percent || 0)) / 100;
+    const serverTotal = Math.round(rawServerTotal - discount);
+
+    const addonsMonthly =
+      (aiAccess ? aiPriceMonthly : 0) + (youtubeNoAds ? youtubePriceMonthly : 0);
+    const addonsTotal = addonsMonthly * months;
+
+    const total = serverTotal + addonsTotal;
     return {
       monthlyRate: Math.round(total / months),
-      rawTotal,
+      rawServerTotal,
+      serverTotal,
       discount,
+      addonsMonthly,
+      addonsTotal,
       total,
+      months,
     };
-  }, [effectiveBasePriceRubles, selectedPeriodDays, activePeriod]);
+  }, [
+    effectiveBasePriceRubles,
+    selectedPeriodDays,
+    activePeriod,
+    aiAccess,
+    aiPriceMonthly,
+    youtubeNoAds,
+    youtubePriceMonthly,
+  ]);
 
   // User balance
   const userBalanceRubles = useMemo(() => {
@@ -696,8 +747,10 @@ export default function DedicatedServerOrder() {
                   )}
                 </p>
               </div>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-400">
-                {t('dedicated.options.included', 'Включено')}
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-accent-400">
+                {aiPriceMonthly > 0
+                  ? `+${aiPriceMonthly} ₽/мес`
+                  : t('dedicated.options.included', 'Включено')}
               </span>
             </label>
 
@@ -730,8 +783,10 @@ export default function DedicatedServerOrder() {
                   )}
                 </p>
               </div>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-400">
-                {t('dedicated.options.included', 'Включено')}
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-accent-400">
+                {youtubePriceMonthly > 0
+                  ? `+${youtubePriceMonthly} ₽/мес`
+                  : t('dedicated.options.included', 'Включено')}
               </span>
             </label>
           </div>
@@ -777,6 +832,16 @@ export default function DedicatedServerOrder() {
               )}
             </div>
           </div>
+
+          {/* Addons breakdown if any */}
+          {calculatePrice.addonsTotal > 0 && (
+            <div className="mb-2.5 flex items-center justify-between text-xs text-zinc-400">
+              <span>{t('dedicated.summary.addons', 'Дополнительные опции')}:</span>
+              <span className="font-semibold text-zinc-200">
+                +{formatAmount(calculatePrice.addonsTotal)}&nbsp;{currencySymbol}
+              </span>
+            </div>
+          )}
 
           {/* User balance status */}
           <div className="mb-4 flex items-center justify-between text-xs sm:text-sm">
