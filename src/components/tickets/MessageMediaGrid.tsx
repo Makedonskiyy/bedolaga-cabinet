@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { ChevronLeftIcon, ChevronRightIcon, DocumentIcon, XIcon } from '@/components/icons';
+import { VoiceMessagePlayer } from './VoiceMessagePlayer';
 
 import { ticketsApi } from '../../api/tickets';
 
@@ -140,15 +141,12 @@ export function MessageMediaGrid({
         const mediaUrl = ticketsApi.getMediaUrl(item.file_id, item.token);
         if (item.type === 'voice') {
           return (
-            <div key={item.file_id} className="voice-message my-2 w-full max-w-md">
-              <audio
-                src={mediaUrl}
-                controls
-                preload="metadata"
-                className="w-full max-w-full rounded-lg"
-              />
-              {item.caption && <p className="mt-1 text-xs text-dark-400">{item.caption}</p>}
-            </div>
+            <VoiceMessagePlayer
+              key={item.file_id}
+              src={mediaUrl}
+              caption={item.caption}
+              fileId={item.file_id}
+            />
           );
         }
         if (item.type === 'video') {

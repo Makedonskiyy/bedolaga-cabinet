@@ -64,6 +64,7 @@ export default function AdminDedicatedServers() {
   const [discount30, setDiscount30] = useState<number>(0);
   const [discount90, setDiscount90] = useState<number>(10);
   const [discount180, setDiscount180] = useState<number>(15);
+  const [discount365, setDiscount365] = useState<number>(22);
   const [countryPrices, setCountryPrices] = useState<CountryPriceItem[]>([]);
   const [newCountryCode, setNewCountryCode] = useState('');
   const [newCountryPrice, setNewCountryPrice] = useState<number>(1490);

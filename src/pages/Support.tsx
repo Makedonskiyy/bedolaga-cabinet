@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { ticketsApi } from '../api/tickets';
 import { MessageMediaGrid } from '../components/tickets/MessageMediaGrid';
 import { VoiceRecorder } from '../components/tickets/VoiceRecorder';
+import { VoiceMessagePlayer } from '../components/tickets/VoiceMessagePlayer';
 import { infoApi } from '../api/info';
 import { useAuthStore } from '../store/auth';
 import { logger } from '../utils/logger';
@@ -700,14 +701,10 @@ export default function Support() {
                       </div>
                       {msg.media_type === 'voice' ? (
                         <div>
-                          <div className="voice-message my-1.5 w-full max-w-md">
-                            <audio
-                              controls
-                              preload="metadata"
-                              src={ticketsApi.getMediaUrl(msg.media_file_id!, msg.media_token)}
-                              className="w-full max-w-full rounded-lg"
-                            />
-                          </div>
+                          <VoiceMessagePlayer
+                            src={ticketsApi.getMediaUrl(msg.media_file_id!, msg.media_token)}
+                            fileId={msg.media_file_id || undefined}
+                          />
                           {msg.message_text && (
                             <div
                               className="mt-2 whitespace-pre-wrap break-words text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
