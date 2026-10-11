@@ -181,6 +181,9 @@ const START_PARAM_ROUTES: Array<{ re: RegExp; to: (match: RegExpExecArray) => st
   // «Продлить» links for expired subscriptions in the bot's rich main menu.
   { re: /^renew_(\d+)$/, to: (match) => `/subscriptions/${match[1]}/renew` },
   { re: /^subscriptions$/, to: () => '/subscriptions' },
+  // Dedicated servers section & new order flow
+  { re: /^(servers|dedicated_servers)$/, to: () => '/servers' },
+  { re: /^(servers_new|dedicated_servers_new)$/, to: () => '/servers/new' },
   // Paid-trial «Активировать триал» link in the bot's rich main menu — the
   // dashboard renders TrialOfferCard with the pay-and-activate flow.
   { re: /^trial$/, to: () => '/' },

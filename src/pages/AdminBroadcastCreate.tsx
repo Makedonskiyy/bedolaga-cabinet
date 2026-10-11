@@ -137,6 +137,7 @@ export default function AdminBroadcastCreate() {
         connect: t('admin.broadcasts.btnConnect', 'Подключиться'),
         subscription: t('admin.broadcasts.btnSubscription', 'Подписка'),
         support: t('admin.broadcasts.btnSupport', 'Техподдержка'),
+        servers: t('admin.broadcasts.btnServers', 'Выделенные серверы'),
         home: t('admin.broadcasts.btnHome', 'На главную'),
       };
       for (const id of selectedButtons) {
