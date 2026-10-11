@@ -680,7 +680,7 @@ export default function AdminDedicatedServers() {
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(order)}
-                          className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-zinc-200 transition-colors hover:border-white/20 hover:bg-white/[0.08]"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-all hover:border-white/[0.18] hover:bg-zinc-700/80 hover:text-white shadow-sm active:scale-[0.98]"
                         >
                           <EditIcon className="h-3.5 w-3.5 text-accent-400" />
                           Управление
@@ -692,7 +692,7 @@ export default function AdminDedicatedServers() {
                             type="button"
                             onClick={() => settingUpMutation.mutate(order.id)}
                             disabled={settingUpMutation.isPending}
-                            className="rounded-xl border border-accent-500/40 bg-accent-500/10 px-3.5 py-2 text-xs font-semibold text-accent-300 transition-colors hover:bg-accent-500/20 disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-xs font-medium text-amber-300 transition-all hover:border-amber-500/50 hover:bg-amber-500/20 disabled:opacity-50 active:scale-[0.98]"
                           >
                             Взять в работу
                           </button>
@@ -703,7 +703,7 @@ export default function AdminDedicatedServers() {
                           <button
                             type="button"
                             onClick={() => handleOpenAssign(order)}
-                            className="rounded-xl bg-accent-500 px-4 py-2 text-xs font-semibold text-black transition-colors hover:bg-accent-400"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-accent-500 px-3 py-1.5 text-xs font-semibold text-black transition-all hover:bg-accent-400 shadow-sm active:scale-[0.98]"
                           >
                             Активировать / Выдать
                           </button>
@@ -714,7 +714,7 @@ export default function AdminDedicatedServers() {
                           <button
                             type="button"
                             onClick={() => handleOpenReject(order)}
-                            className="rounded-xl border border-error-500/30 bg-error-500/10 px-3 py-2 text-xs font-semibold text-error-400 transition-colors hover:bg-error-500/20"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-400 transition-all hover:border-rose-500/50 hover:bg-rose-500/20 active:scale-[0.98]"
                           >
                             Отклонить
                           </button>
@@ -734,9 +734,9 @@ export default function AdminDedicatedServers() {
                                 }
                               }
                             }}
-                            className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.08]"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-all hover:border-white/[0.18] hover:bg-zinc-700/80 hover:text-white shadow-sm active:scale-[0.98]"
                           >
-                            <CopyIcon className="h-3.5 w-3.5" />
+                            <CopyIcon className="h-3.5 w-3.5 text-accent-400" />
                             Скопировать ссылку
                           </button>
                         )}

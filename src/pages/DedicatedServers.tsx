@@ -73,34 +73,36 @@ export default function DedicatedServers() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, compact = false) => {
     const s = status.toLowerCase();
     if (s === 'active') {
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-success-500/15 px-2.5 py-0.5 text-xs font-medium text-success-400">
-          <span className="h-1.5 w-1.5 rounded-full bg-success-400" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
           {t('dedicated.status.active', 'Активен')}
         </span>
       );
     }
     if (s === 'pending' || s === 'setting_up') {
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-500/15 px-2.5 py-0.5 text-xs font-medium text-warning-400">
-          <ClockIcon className="h-3 w-3 animate-spin text-warning-400" />
-          {t('dedicated.status.pending', 'Сервер настраивается инженером (обычно 10–30 минут)')}
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/25 px-2.5 py-0.5 text-xs font-medium text-amber-400">
+          <ClockIcon className="h-3 w-3 animate-spin text-amber-400" />
+          {compact
+            ? t('dedicated.status.settingUpShort', 'Настройка')
+            : t('dedicated.status.pending', 'Сервер настраивается инженером (обычно 10–30 минут)')}
         </span>
       );
     }
     if (s === 'rejected') {
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-error-500/15 px-2.5 py-0.5 text-xs font-medium text-error-400">
-          <span className="h-1.5 w-1.5 rounded-full bg-error-400" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/25 px-2.5 py-0.5 text-xs font-medium text-rose-400">
+          <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
           {t('dedicated.status.rejected', 'Заказ отклонён')}
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-dark-700 px-2.5 py-0.5 text-xs font-medium text-dark-300">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-800 border border-white/[0.08] px-2.5 py-0.5 text-xs font-medium text-zinc-300">
         {status}
       </span>
     );
@@ -297,9 +299,11 @@ export default function DedicatedServers() {
                   <button
                     type="button"
                     onClick={() => setSelectedDetailServer(server)}
-                    className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-dark-200 transition-all hover:border-white/[0.16] hover:bg-white/[0.08] hover:text-white shadow-sm active:scale-[0.98]"
                   >
-                    <InfoIcon className="h-3.5 w-3.5 text-accent-400" />
+                    <span className="flex h-4 w-4 items-center justify-center rounded-md bg-accent-500/15 text-accent-400">
+                      <InfoIcon className="h-3 w-3" />
+                    </span>
                     {t('dedicated.actions.details', 'Детали сервера')}
                   </button>
 
@@ -315,9 +319,11 @@ export default function DedicatedServers() {
                               handleCopy(server.subscription_url, 'Ссылка на подписку');
                             }
                           }}
-                          className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
+                          className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-dark-200 transition-all hover:border-white/[0.16] hover:bg-white/[0.08] hover:text-white shadow-sm active:scale-[0.98]"
                         >
-                          <CopyIcon className="h-3.5 w-3.5 text-accent-400" />
+                          <span className="flex h-4 w-4 items-center justify-center rounded-md bg-accent-500/15 text-accent-400">
+                            <CopyIcon className="h-3 w-3" />
+                          </span>
                           {t('dedicated.actions.copySub', 'Скопировать ссылку')}
                         </button>
                       )}
@@ -327,9 +333,11 @@ export default function DedicatedServers() {
                         <button
                           type="button"
                           onClick={() => setActiveQrServer(server)}
-                          className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
+                          className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-dark-200 transition-all hover:border-white/[0.16] hover:bg-white/[0.08] hover:text-white shadow-sm active:scale-[0.98]"
                         >
-                          <QrCodeIcon className="h-3.5 w-3.5 text-accent-400" />
+                          <span className="flex h-4 w-4 items-center justify-center rounded-md bg-accent-500/15 text-accent-400">
+                            <QrCodeIcon className="h-3 w-3" />
+                          </span>
                           {t('dedicated.actions.qr', 'QR-код')}
                         </button>
                       )}
@@ -341,9 +349,11 @@ export default function DedicatedServers() {
                     <button
                       type="button"
                       onClick={() => handleOpenScript(server)}
-                      className="flex items-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/60 px-3.5 py-2 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700/60"
+                      className="inline-flex items-center gap-2 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3.5 py-2 text-xs font-medium text-amber-300 transition-all hover:bg-amber-500/20 hover:border-amber-500/40 shadow-sm active:scale-[0.98]"
                     >
-                      <TerminalIcon className="h-3.5 w-3.5 text-warning-400" />
+                      <span className="flex h-4 w-4 items-center justify-center rounded-md bg-amber-500/20 text-amber-400">
+                        <TerminalIcon className="h-3 w-3" />
+                      </span>
                       {t('dedicated.actions.setupCommand', 'Команда установки')}
                     </button>
                   )}
@@ -356,13 +366,10 @@ export default function DedicatedServers() {
 
       {/* Server Details Modal */}
       {selectedDetailServer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-950/75 p-4 backdrop-blur-sm">
-          <div
-            className="w-full max-w-lg rounded-2xl border p-6 shadow-2xl"
-            style={{ background: g.cardBg, borderColor: g.cardBorder }}
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+          <div className="w-full max-w-lg rounded-2xl border border-white/[0.08] bg-[#121316] p-6 shadow-2xl shadow-black/80 text-left">
             {/* Modal Header */}
-            <div className="mb-4 flex items-center justify-between border-b border-dark-700/50 pb-3">
+            <div className="mb-4 flex items-center justify-between border-b border-white/[0.06] pb-3">
               <div className="flex items-center gap-3">
                 <span className="text-3xl leading-none">
                   {selectedDetailServer.flag ||
@@ -371,14 +378,14 @@ export default function DedicatedServers() {
                 </span>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold text-dark-100">
+                    <h3 className="text-base font-semibold text-white">
                       {selectedDetailServer.country_name || selectedDetailServer.country_code}
                     </h3>
-                    <span className="rounded bg-dark-700/60 px-1.5 py-0.5 text-xs text-dark-300">
+                    <span className="rounded-md border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 text-xs text-zinc-400">
                       #{selectedDetailServer.id}
                     </span>
                   </div>
-                  <span className="text-xs text-dark-400">
+                  <span className="text-xs text-zinc-400">
                     {selectedDetailServer.deployment_type === 'turnkey'
                       ? t('dedicated.deployment.turnkey.label', 'Под ключ (Triton VPS)')
                       : t('dedicated.deployment.byos.label', 'Свой сервер (BYOS)')}
@@ -386,40 +393,87 @@ export default function DedicatedServers() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {getStatusBadge(selectedDetailServer.status)}
+                {getStatusBadge(selectedDetailServer.status, true)}
                 <button
                   type="button"
                   onClick={() => setSelectedDetailServer(null)}
-                  className="rounded-lg p-1 text-dark-400 hover:bg-dark-800 hover:text-dark-200"
+                  className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-white"
                 >
-                  <XIcon className="h-5 w-5" />
+                  <XIcon className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
+            {/* Status Informative Notice */}
+            {(selectedDetailServer.status.toLowerCase() === 'pending' ||
+              selectedDetailServer.status.toLowerCase() === 'setting_up') && (
+              <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 p-3.5 text-left">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">
+                  <ClockIcon className="h-4 w-4 animate-spin" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-amber-300">
+                    Сервер настраивается инженером
+                  </h4>
+                  <p className="mt-0.5 text-xs leading-relaxed text-amber-200/80">
+                    Обычно это занимает 10–30 минут. Как только сервер будет подключён, статус
+                    изменится на «Активен», а персональная ссылка появится здесь и в Telegram.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {selectedDetailServer.status.toLowerCase() === 'rejected' && (
+              <div className="mb-4 flex items-start gap-3 rounded-xl border border-rose-500/25 bg-rose-500/10 p-3.5 text-left">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-500/20 text-rose-400">
+                  <XIcon className="h-4 w-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-rose-300">Заказ отклонён</h4>
+                  <p className="mt-0.5 text-xs leading-relaxed text-rose-200/80">
+                    {selectedDetailServer.rejected_reason
+                      ? `Причина: ${selectedDetailServer.rejected_reason}. Средства автоматически возвращены на баланс.`
+                      : 'Средства автоматически возвращены на баланс вашего аккаунта.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Server Specs & Info */}
-            <div className="mb-4 space-y-2.5 text-sm">
-              <div className="flex items-center justify-between rounded-xl bg-dark-800/40 px-3.5 py-2.5">
-                <span className="text-xs text-dark-400">
+            <div className="mb-4 space-y-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-sm">
+              <div className="flex items-center justify-between py-1 px-1">
+                <span className="text-xs text-zinc-400">
                   {t('dedicated.params.ip', 'Выделенный IP')}
                 </span>
-                <span className="font-mono text-xs font-semibold text-dark-200">
-                  {selectedDetailServer.ip_address || (
-                    <span className="text-dark-500">
+                <div className="flex items-center gap-1.5 font-mono text-xs font-medium text-zinc-200">
+                  {selectedDetailServer.ip_address ? (
+                    <>
+                      <span>{selectedDetailServer.ip_address}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(selectedDetailServer.ip_address!, 'IP-адрес')}
+                        className="rounded-md p-1 text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-white"
+                        title="Скопировать IP"
+                      >
+                        <CopyIcon className="h-3 w-3" />
+                      </button>
+                    </>
+                  ) : (
+                    <span className="font-sans text-zinc-500">
                       {selectedDetailServer.status === 'pending' ||
                       selectedDetailServer.status === 'setting_up'
-                        ? t('dedicated.params.assigning', 'Назначается администратором...')
+                        ? t('dedicated.params.assigning', 'Назначается инженером...')
                         : '—'}
                     </span>
                   )}
-                </span>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-xl bg-dark-800/40 px-3.5 py-2.5">
-                <span className="text-xs text-dark-400">
+              <div className="flex items-center justify-between border-t border-white/[0.04] py-1 px-1 pt-2">
+                <span className="text-xs text-zinc-400">
                   {t('dedicated.params.period', 'Срок действия')}
                 </span>
-                <span className="text-xs font-medium text-dark-200">
+                <span className="text-xs font-medium text-zinc-200">
                   {selectedDetailServer.expires_at ? (
                     new Date(selectedDetailServer.expires_at).toLocaleDateString()
                   ) : (
@@ -428,26 +482,26 @@ export default function DedicatedServers() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between rounded-xl bg-dark-800/40 px-3.5 py-2.5">
-                <span className="text-xs text-dark-400">
+              <div className="flex items-center justify-between border-t border-white/[0.04] py-1 px-1 pt-2">
+                <span className="text-xs text-zinc-400">
                   {t('dedicated.params.options', 'Подключённые опции')}
                 </span>
                 <div className="flex items-center gap-1.5">
                   {selectedDetailServer.options?.ai_access && (
-                    <span className="inline-flex items-center gap-1 rounded bg-accent-500/15 px-2 py-0.5 text-xs font-medium text-accent-400">
+                    <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
                       <SparklesIcon className="h-3 w-3" />
                       AI Доступ
                     </span>
                   )}
                   {selectedDetailServer.options?.youtube_no_ads && (
-                    <span className="inline-flex items-center gap-1 rounded bg-accent-500/15 px-2 py-0.5 text-xs font-medium text-accent-400">
+                    <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
                       <ShieldIcon className="h-3 w-3" />
                       YouTube без рекламы
                     </span>
                   )}
                   {!selectedDetailServer.options?.ai_access &&
                     !selectedDetailServer.options?.youtube_no_ads && (
-                      <span className="text-xs text-dark-400">—</span>
+                      <span className="text-xs text-zinc-500">—</span>
                     )}
                 </div>
               </div>
@@ -455,7 +509,7 @@ export default function DedicatedServers() {
 
             {/* Engineer / Admin Notes if provided */}
             {selectedDetailServer.user_notes && (
-              <div className="mb-4 rounded-xl border border-accent-500/30 bg-accent-500/10 p-4 text-left">
+              <div className="mb-4 rounded-xl border border-accent-500/25 bg-accent-500/5 p-3.5 text-left">
                 <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-accent-400">
                   <InfoIcon className="h-3.5 w-3.5" />
                   {t(
@@ -463,7 +517,7 @@ export default function DedicatedServers() {
                     'Информация и инструкции от администратора',
                   )}
                 </div>
-                <div className="mt-2 whitespace-pre-wrap font-sans text-xs leading-relaxed text-dark-200">
+                <div className="mt-2 whitespace-pre-wrap font-sans text-xs leading-relaxed text-zinc-300">
                   {selectedDetailServer.user_notes}
                 </div>
               </div>
@@ -480,7 +534,7 @@ export default function DedicatedServers() {
                         handleCopy(selectedDetailServer.subscription_url, 'Ссылка подписки');
                       }
                     }}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/80 py-2.5 text-xs font-semibold text-dark-200 hover:border-dark-600 hover:bg-dark-700"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] py-2.5 text-xs font-medium text-zinc-200 transition-all hover:bg-white/[0.08] hover:text-white"
                   >
                     <CopyIcon className="h-3.5 w-3.5 text-accent-400" />
                     {t('dedicated.actions.copySub', 'Скопировать ссылку')}
@@ -492,7 +546,7 @@ export default function DedicatedServers() {
                       setSelectedDetailServer(null);
                       setActiveQrServer(s);
                     }}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/80 py-2.5 text-xs font-semibold text-dark-200 hover:border-dark-600 hover:bg-dark-700"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] py-2.5 text-xs font-medium text-zinc-200 transition-all hover:bg-white/[0.08] hover:text-white"
                   >
                     <QrCodeIcon className="h-3.5 w-3.5 text-accent-400" />
                     {t('dedicated.actions.qr', 'QR-код')}
@@ -508,7 +562,7 @@ export default function DedicatedServers() {
                   setSelectedDetailServer(null);
                   navigate('/support');
                 }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 py-3 text-xs font-semibold text-on-accent transition-colors hover:bg-accent-600"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 py-2.5 text-xs font-semibold text-black shadow-md shadow-accent-500/15 transition-all hover:bg-accent-400 active:scale-[0.99]"
               >
                 <ChatIcon className="h-4 w-4" />
                 {t('dedicated.details.supportBtn', 'Написать в поддержку по серверу')}
@@ -516,7 +570,7 @@ export default function DedicatedServers() {
               <button
                 type="button"
                 onClick={() => setSelectedDetailServer(null)}
-                className="w-full rounded-xl border border-dark-700 py-2 text-xs font-semibold text-dark-400 transition-colors hover:bg-dark-800 hover:text-dark-200"
+                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.02] py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-zinc-200"
               >
                 {t('common.close', 'Закрыть')}
               </button>
@@ -527,27 +581,24 @@ export default function DedicatedServers() {
 
       {/* QR Code Modal */}
       {activeQrServer?.subscription_url && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-950/70 p-4">
-          <div
-            className="w-full max-w-sm rounded-2xl border p-6 text-center shadow-2xl"
-            style={{ background: g.cardBg, borderColor: g.cardBorder }}
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+          <div className="w-full max-w-sm rounded-2xl border border-white/[0.08] bg-[#121316] p-6 text-center shadow-2xl shadow-black/80">
             <div className="mb-3 flex items-center justify-between">
               <div className="text-left">
-                <h3 className="text-base font-semibold text-dark-100">
+                <h3 className="text-base font-semibold text-white">
                   {t('dedicated.qr.title', 'QR-код подключения')}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveQrServer(null)}
-                className="text-dark-400 hover:text-dark-200"
+                className="rounded-lg p-1 text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-white"
               >
-                <XIcon className="h-5 w-5" />
+                <XIcon className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="my-5 flex justify-center rounded-2xl bg-white p-4">
+            <div className="my-5 flex justify-center rounded-2xl bg-white p-4 shadow-inner">
               <QRCodeSVG
                 value={activeQrServer.subscription_url}
                 size={220}
@@ -556,7 +607,7 @@ export default function DedicatedServers() {
               />
             </div>
 
-            <p className="mb-4 text-xs text-dark-400">
+            <p className="mb-4 text-xs leading-relaxed text-zinc-400">
               {t(
                 'dedicated.qr.hint',
                 'Отсканируйте код камерой в приложении клиента для мгновенного добавления профиля.',
@@ -570,7 +621,7 @@ export default function DedicatedServers() {
                   handleCopy(activeQrServer.subscription_url, 'Ссылка подписки');
                 }
               }}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 py-2.5 text-xs font-semibold text-on-accent transition-colors hover:bg-accent-600"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 py-2.5 text-xs font-semibold text-black shadow-md shadow-accent-500/15 transition-all hover:bg-accent-400 active:scale-[0.99]"
             >
               <CopyIcon className="h-4 w-4" />
               {t('dedicated.actions.copySub', 'Скопировать ссылку подписки')}
@@ -581,37 +632,34 @@ export default function DedicatedServers() {
 
       {/* BYOS Setup Script Modal */}
       {activeScriptServer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-950/70 p-4">
-          <div
-            className="w-full max-w-lg rounded-2xl border p-6 shadow-2xl"
-            style={{ background: g.cardBg, borderColor: g.cardBorder }}
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+          <div className="w-full max-w-lg rounded-2xl border border-white/[0.08] bg-[#121316] p-6 text-left shadow-2xl shadow-black/80">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TerminalIcon className="h-5 w-5 text-warning-400" />
-                <h3 className="text-base font-semibold text-dark-100">
+                <TerminalIcon className="h-5 w-5 text-amber-400" />
+                <h3 className="text-base font-semibold text-white">
                   {t('dedicated.byos.modalTitle', 'Команда установки на вашем VPS')}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveScriptServer(null)}
-                className="text-dark-400 hover:text-dark-200"
+                className="rounded-lg p-1 text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-white"
               >
-                <XIcon className="h-5 w-5" />
+                <XIcon className="h-4 w-4" />
               </button>
             </div>
 
-            <p className="mb-3 text-xs text-dark-300">
+            <p className="mb-3 text-xs leading-relaxed text-zinc-300">
               {t(
                 'dedicated.byos.modalDesc',
                 'Выполните команду на чистом сервере Ubuntu/Debian под пользователем root. Скрипт установит Docker, оптимизирует сеть (BBR), настроит фаервол (UFW) и подключит ноду к защищённой сети Triton:',
               )}
             </p>
 
-            <div className="relative mb-4 rounded-xl border border-dark-700 bg-dark-900/90 p-3 font-mono text-xs text-dark-100">
+            <div className="relative mb-4 rounded-xl border border-white/[0.08] bg-[#0c0d0f] p-3 font-mono text-xs text-zinc-200">
               {isLoadingScript && !fetchedScript ? (
-                <div className="py-2 text-center text-dark-400">Загрузка команды...</div>
+                <div className="py-2 text-center text-zinc-500">Загрузка команды...</div>
               ) : (
                 <pre className="overflow-x-auto whitespace-pre-wrap break-all">
                   {fetchedScript ||
@@ -625,7 +673,7 @@ export default function DedicatedServers() {
               <button
                 type="button"
                 onClick={() => setActiveScriptServer(null)}
-                className="rounded-xl border border-dark-700 px-4 py-2 text-xs font-semibold text-dark-300 transition-colors hover:bg-dark-800"
+                className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
               >
                 {t('common.close', 'Закрыть')}
               </button>
@@ -638,7 +686,7 @@ export default function DedicatedServers() {
                     `curl -sSL https://get.remnawave.com/agent.sh | bash -s -- --token order_${activeScriptServer.id}`;
                   handleCopy(cmd, 'Команда установки');
                 }}
-                className="flex items-center gap-1.5 rounded-xl bg-accent-500 px-4 py-2 text-xs font-semibold text-on-accent transition-colors hover:bg-accent-600"
+                className="flex items-center gap-1.5 rounded-xl bg-accent-500 px-4 py-2 text-xs font-semibold text-black shadow-md shadow-accent-500/15 transition-all hover:bg-accent-400 active:scale-[0.99]"
               >
                 <CopyIcon className="h-3.5 w-3.5" />
                 {t('common.copy', 'Скопировать команду')}

@@ -83,6 +83,7 @@ export default function AdminBroadcastCreate() {
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [uploadedFileId, setUploadedFileId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const mediaPreviewRef = useRef<string | null>(null);
 
   // Revoke blob URLs on unmount to prevent memory leaks
@@ -212,12 +213,20 @@ export default function AdminBroadcastCreate() {
     }
 
     setIsUploading(true);
+    setUploadError(null);
     try {
       const result = await adminBroadcastsApi.uploadMedia(file, detectedType);
       setUploadedFileId(result.file_id);
-    } catch {
+    } catch (err: unknown) {
       setMediaFile(null);
       setMediaPreview(null);
+      const detail =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        t(
+          'admin.broadcasts.mediaUploadError',
+          'Не удалось загрузить медиафайл. Проверьте формат и размер.',
+        );
+      setUploadError(String(detail));
     } finally {
       setIsUploading(false);
     }
@@ -232,6 +241,7 @@ export default function AdminBroadcastCreate() {
     setMediaFile(null);
     setMediaPreview(null);
     setUploadedFileId(null);
+    setUploadError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -560,6 +570,20 @@ export default function AdminBroadcastCreate() {
                   <span>{t('admin.broadcasts.addMedia')}</span>
                 </button>
               </div>
+            )}
+            {uploadError && <p className="mt-2 text-xs text-error-400">{uploadError}</p>}
+            {mediaFile && (
+              <p className="mt-2 text-xs text-dark-400">
+                {messageText.length > 1024
+                  ? t(
+                      'admin.broadcasts.mediaCaptionSplitHint',
+                      '💡 Текст длиннее 1024 символов: медиафайл и полный текст будут отправлены последовательно.',
+                    )
+                  : t(
+                      'admin.broadcasts.mediaCaptionHint',
+                      '💡 Лимит подписи к медиа в Telegram: 1024 символа (при превышении будет отправлено отдельным сообщением).',
+                    )}
+              </p>
             )}
           </div>
 

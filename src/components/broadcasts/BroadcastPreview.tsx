@@ -48,12 +48,29 @@ const TG_TAGS = new Set([
   'pre',
   'a',
   'tg-spoiler',
+  'tg-emoji',
   'span',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'hr',
+  'p',
+  'blockquote',
+  'ul',
+  'ol',
+  'li',
+  'article',
+  'section',
+  'details',
+  'summary',
 ]);
 
 function tokenize(input: string): Token[] {
   const tokens: Token[] = [];
-  const pattern = /<(\/?)([a-z][a-z0-9-]*)(\s+[^>]*)?>|<br\s*\/?>/gi;
+  const pattern = /<(\/?)([a-z][a-z0-9-]*)(\s+[^>]*)?>|<br\s*\/?>|<hr\s*\/?>/gi;
   const matches = [...input.matchAll(pattern)];
   let lastIdx = 0;
   for (const m of matches) {
@@ -61,6 +78,9 @@ function tokenize(input: string): Token[] {
     if (idx > lastIdx) tokens.push({ kind: 'text', value: input.slice(lastIdx, idx) });
     if (m[0].toLowerCase().startsWith('<br')) {
       tokens.push({ kind: 'br' });
+    } else if (m[0].toLowerCase().startsWith('<hr')) {
+      tokens.push({ kind: 'open', tag: 'hr' });
+      tokens.push({ kind: 'close', tag: 'hr' });
     } else {
       const isClose = m[1] === '/';
       const tag = m[2].toLowerCase();
@@ -133,7 +153,69 @@ function wrap(frame: Frame, key: number): ReactNode {
         </a>
       );
     }
+    case 'h1':
+    case 'h2':
+    case 'h3':
+    case 'h4':
+      return (
+        <h4 key={k} className="my-2 text-base font-bold text-white">
+          {frame.children}
+        </h4>
+      );
+    case 'h5':
+    case 'h6':
+      return (
+        <h6 key={k} className="my-1.5 text-sm font-semibold text-white">
+          {frame.children}
+        </h6>
+      );
+    case 'hr':
+      return <hr key={k} className="my-2.5 border-dark-600" />;
+    case 'p':
+      return (
+        <p key={k} className="my-1.5">
+          {frame.children}
+        </p>
+      );
+    case 'blockquote':
+      return (
+        <blockquote
+          key={k}
+          className="my-2 border-l-2 border-accent-500 pl-2.5 italic text-dark-200"
+        >
+          {frame.children}
+        </blockquote>
+      );
+    case 'ul':
+    case 'ol':
+      return (
+        <ul key={k} className="my-1.5 space-y-1">
+          {frame.children}
+        </ul>
+      );
+    case 'li':
+      return (
+        <li key={k} className="list-none">
+          • {frame.children}
+        </li>
+      );
+    case 'article':
+    case 'section':
+      return <div key={k}>{frame.children}</div>;
+    case 'details':
+      return (
+        <details key={k} className="my-1.5 rounded bg-dark-950/20 p-2">
+          {frame.children}
+        </details>
+      );
+    case 'summary':
+      return (
+        <summary key={k} className="cursor-pointer font-medium text-white">
+          {frame.children}
+        </summary>
+      );
     case 'tg-spoiler':
+    case 'tg-emoji':
     case 'span':
       return <span key={k}>{frame.children}</span>;
     default:

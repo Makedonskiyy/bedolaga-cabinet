@@ -35,6 +35,11 @@ export interface DedicatedServersConfigResponse {
     youtube_no_ads?: DedicatedOptionConfig;
     [key: string]: DedicatedOptionConfig | undefined;
   };
+  option_prices_rubles?: {
+    ai_access?: number;
+    youtube_no_ads?: number;
+    [key: string]: number | undefined;
+  };
   marketing?: DedicatedMarketing;
   base_price_rubles?: number;
 }
