@@ -8,6 +8,7 @@ import {
   type CustomBroadcastButton,
 } from '../api/adminBroadcasts';
 import { AdminBackButton } from '../components/admin';
+import { useNotify } from '../platform';
 import {
   BroadcastAudienceEditor,
   emptyAudience,
@@ -25,6 +26,20 @@ import {
   XIcon,
 } from '@/components/icons';
 
+function getErrorMessage(err: unknown, defaultMsg: string): string {
+  if (err && typeof err === 'object') {
+    const anyErr = err as {
+      response?: { data?: { detail?: string | { msg?: string }[] } };
+      message?: string;
+    };
+    const detail = anyErr.response?.data?.detail;
+    if (typeof detail === 'string') return detail;
+    if (Array.isArray(detail) && detail[0]?.msg) return detail[0].msg;
+    if (anyErr.message) return anyErr.message;
+  }
+  return defaultMsg;
+}
+
 /** `?email_user=<id>` opens an Email broadcast for one user from their profile. */
 function parseEmailUserParam(value: string | null): number | null {
   if (!value || !/^\d+$/.test(value)) return null;
@@ -36,6 +51,7 @@ export default function AdminBroadcastCreate() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const notify = useNotify();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -84,6 +100,7 @@ export default function AdminBroadcastCreate() {
   const [uploadedFileId, setUploadedFileId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const mediaPreviewRef = useRef<string | null>(null);
 
   // Revoke blob URLs on unmount to prevent memory leaks
@@ -169,8 +186,14 @@ export default function AdminBroadcastCreate() {
   const createMutation = useMutation({
     mutationFn: adminBroadcastsApi.createCombined,
     onSuccess: (data) => {
+      setSubmitError(null);
       queryClient.invalidateQueries({ queryKey: ['admin', 'broadcasts'] });
       navigate(`/admin/broadcasts/${data.id}`);
+    },
+    onError: (err: unknown) => {
+      const msg = getErrorMessage(err, t('common.error', 'Ошибка при создании рассылки'));
+      setSubmitError(msg);
+      notify.error(msg);
     },
   });
 
@@ -313,6 +336,7 @@ export default function AdminBroadcastCreate() {
   // Submit
   const handleSubmit = async () => {
     if (!isValid) return;
+    setSubmitError(null);
 
     // Single channel — use existing createMutation with navigation to detail
     if (telegramEnabled && !emailEnabled) {
@@ -371,6 +395,10 @@ export default function AdminBroadcastCreate() {
 
       queryClient.invalidateQueries({ queryKey: ['admin', 'broadcasts'] });
       navigate('/admin/broadcasts');
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, t('common.error', 'Ошибка при создании рассылки'));
+      setSubmitError(msg);
+      notify.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -824,8 +852,14 @@ export default function AdminBroadcastCreate() {
       )}
 
       {/* Footer */}
-      <div className="card flex items-center justify-end">
-        <div className="flex gap-3">
+      <div className="card flex flex-col gap-3">
+        {submitError && (
+          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
+            <span className="font-semibold">{t('common.error', 'Ошибка')}: </span>
+            {submitError}
+          </div>
+        )}
+        <div className="flex items-center justify-end gap-3">
           <button onClick={() => navigate('/admin/broadcasts')} className="btn-secondary">
             {t('common.cancel')}
           </button>
