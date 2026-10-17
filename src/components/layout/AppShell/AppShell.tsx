@@ -46,6 +46,7 @@ import { LogoutButton } from './LogoutButton';
 import { useBackgroundConsumer } from '@/components/backgrounds/BackgroundHost';
 import { HalloweenBannerModal } from '@/components/halloween/HalloweenBannerModal';
 import { HalloweenFloatingButton } from '@/components/halloween/HalloweenFloatingButton';
+import { halloweenApi } from '@/api/halloween';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -79,6 +80,14 @@ export function AppShell({ children }: AppShellProps) {
   });
   const canToggleTheme = enabledThemes?.dark && enabledThemes?.light;
 
+  // Halloween config (visible to regular users only if enabled, or always if admin)
+  const { data: halloweenConfig } = useQuery({
+    queryKey: ['halloween-config'],
+    queryFn: halloweenApi.getConfig,
+    staleTime: 1000 * 30,
+  });
+  const canAccessHalloween = Boolean(halloweenConfig?.is_enabled || isAdmin);
+
   // Only apply fullscreen UI adjustments on mobile Telegram (iOS/Android)
   const isMobileFullscreen = isFullscreen && isMobile;
 
@@ -101,7 +110,7 @@ export function AppShell({ children }: AppShellProps) {
   const desktopNav = [
     { path: '/', label: t('nav.dashboard'), icon: HomeIcon },
     { path: '/subscriptions', label: t('nav.subscription'), icon: SubscriptionIcon },
-    { path: '/halloween', label: 'Хэллоуин 🎃', icon: GiftIcon },
+    ...(canAccessHalloween ? [{ path: '/halloween', label: 'Хэллоуин 🎃', icon: GiftIcon }] : []),
     { path: '/servers', label: t('nav.servers', 'Личные серверы'), icon: ServerIcon },
     { path: '/balance', label: t('nav.balance'), icon: CreditCardIcon },
     ...(referralEnabled ? [{ path: '/referral', label: t('nav.referral'), icon: UsersIcon }] : []),
@@ -293,9 +302,13 @@ export function AppShell({ children }: AppShellProps) {
       {/* Mobile Bottom Navigation — только на экранах её кнопок */}
       {showMobileNav && <MobileBottomNav items={navItems} isMenuOpen={mobileMenuOpen} />}
 
-      {/* Хэллоуинский ивент: всплывающий баннер и плавающая кнопка */}
-      <HalloweenBannerModal />
-      <HalloweenFloatingButton />
+      {/* Хэллоуинский ивент: всплывающий баннер и плавающая кнопка (только если ивент включен или админ) */}
+      {canAccessHalloween && (
+        <>
+          <HalloweenBannerModal />
+          <HalloweenFloatingButton />
+        </>
+      )}
     </div>
   );
 }

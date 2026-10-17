@@ -1,5 +1,12 @@
 import { apiClient } from './client';
 
+export interface HalloweenConfigResponse {
+  is_enabled: boolean;
+  is_admin: boolean;
+  can_access: boolean;
+  remaining_seconds: number;
+}
+
 export interface HalloweenStateResponse {
   user_id: number;
   earned_minutes: number;
@@ -49,7 +56,58 @@ export interface UncurseResponse {
   state: HalloweenStateResponse;
 }
 
+export interface HalloweenAdminStatsResponse {
+  is_enabled: boolean;
+  total_players: number;
+  total_earned_minutes: number;
+  total_available_minutes: number;
+  total_claimed_days: number;
+  total_games: number;
+  total_treats: number;
+  total_tricks: number;
+  treat_percentage: number;
+  trick_percentage: number;
+  today_games: number;
+  today_treats: number;
+  today_tricks: number;
+  today_treat_percentage: number;
+  today_trick_percentage: number;
+  today_claims_days: number;
+  today_claims_count: number;
+  today_new_players: number;
+  level_distribution?: Record<number, number>;
+  rewards_breakdown: Array<{
+    reward_type: string;
+    count: number;
+    total_value: number;
+  }>;
+  top_players: Array<{
+    user_id: number;
+    name: string;
+    earned_minutes: number;
+    available_minutes?: number;
+    level: number;
+    claimed_days: number;
+  }>;
+  recent_games: Array<{
+    id: number;
+    user_id: number;
+    user_name: string;
+    is_treat: boolean;
+    chosen_pumpkin: number;
+    reward_type: string;
+    reward_title: string;
+    reward_value: number;
+    created_at: string | null;
+  }>;
+}
+
 export const halloweenApi = {
+  getConfig: async (): Promise<HalloweenConfigResponse> => {
+    const response = await apiClient.get<HalloweenConfigResponse>('/halloween/config');
+    return response.data;
+  },
+
   getState: async (): Promise<HalloweenStateResponse> => {
     const response = await apiClient.get<HalloweenStateResponse>('/halloween/state');
     return response.data;
@@ -79,6 +137,29 @@ export const halloweenApi = {
 
   claimReward: async (days: number): Promise<ClaimRewardResponse> => {
     const response = await apiClient.post<ClaimRewardResponse>('/halloween/claim', { days });
+    return response.data;
+  },
+
+  getAdminStats: async (): Promise<HalloweenAdminStatsResponse> => {
+    const response = await apiClient.get<HalloweenAdminStatsResponse>('/halloween/admin/stats');
+    return response.data;
+  },
+
+  toggleEvent: async (
+    enabled: boolean,
+  ): Promise<{ success: boolean; is_enabled: boolean; message: string }> => {
+    const response = await apiClient.post<{
+      success: boolean;
+      is_enabled: boolean;
+      message: string;
+    }>('/halloween/admin/toggle', { enabled });
+    return response.data;
+  },
+
+  sendAdminReport: async (): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.post<{ success: boolean; message: string }>(
+      '/halloween/admin/send-report',
+    );
     return response.data;
   },
 };

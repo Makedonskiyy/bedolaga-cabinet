@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useHaptic, usePlatform } from '@/platform';
+import { useAuthStore } from '@/store/auth';
 import { halloweenApi, type HalloweenStateResponse } from '@/api/halloween';
 import { HalloweenTrickOrTreatModal } from '@/components/halloween/HalloweenTrickOrTreatModal';
 import { HalloweenClaimModal } from '@/components/halloween/HalloweenClaimModal';
+import { HalloweenAdminModal } from '@/components/halloween/HalloweenAdminModal';
 import { BrokenGlassOverlay } from '@/components/halloween/BrokenGlassOverlay';
 
 interface FloatingTap {
@@ -17,11 +19,22 @@ interface FloatingTap {
 export default function HalloweenTapalka() {
   const haptic = useHaptic();
   const { openTelegramLink } = usePlatform();
+  const isAdmin = useAuthStore((state) => state.isAdmin);
+
+  // Конфиг видимости
+  const { data: config, isLoading: isConfigLoading } = useQuery({
+    queryKey: ['halloween-config'],
+    queryFn: halloweenApi.getConfig,
+    staleTime: 1000 * 30,
+  });
+
+  const canAccess = Boolean(config?.is_enabled || isAdmin);
 
   // Состояние с бэкенда
   const { data: serverState, refetch } = useQuery({
     queryKey: ['halloween-state'],
     queryFn: halloweenApi.getState,
+    enabled: canAccess,
     refetchInterval: 10000,
   });
 
@@ -36,6 +49,7 @@ export default function HalloweenTapalka() {
   // Модальные окна
   const [isTotOpen, setIsTotOpen] = useState(false);
   const [isClaimOpen, setIsClaimOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isUncursing, setIsUncursing] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
 
@@ -194,8 +208,57 @@ export default function HalloweenTapalka() {
     }
   };
 
+  if (!isConfigLoading && !canAccess) {
+    return (
+      <div className="relative mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center p-6 text-center select-none">
+        <div className="relative mb-6">
+          <img
+            src="/halloween/pumpkin.png"
+            alt="Halloween"
+            className="h-32 w-32 object-contain drop-shadow-[0_0_30px_rgba(249,115,22,0.4)] animate-pulse"
+          />
+        </div>
+        <h2 className="text-2xl font-black text-orange-500 drop-shadow-sm">
+          Ивент скоро начнется! 🎃
+        </h2>
+        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+          Хэллоуинская активность пока находится на стадии подготовки. Скоро тыква оживет, и
+          откроется доступ к фарму минут и ценным наградам!
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="relative mx-auto flex min-h-[90vh] max-w-lg flex-col items-center justify-between pb-24 pt-3 select-none">
+      {/* Панель администратора */}
+      {isAdmin && (
+        <div className="mb-3 flex w-full items-center justify-between rounded-2xl border border-orange-500/40 bg-zinc-900/90 px-3.5 py-2 shadow-lg backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <span className="text-base">👑</span>
+            <div className="text-left">
+              <div className="text-3xs font-extrabold uppercase tracking-wider text-orange-400">
+                Админ-режим
+              </div>
+              <div className="text-2xs font-semibold text-zinc-300">
+                {config?.is_enabled ? (
+                  <span className="text-emerald-400">● Включен для всех</span>
+                ) : (
+                  <span className="text-amber-400">● Скрыт (только админы)</span>
+                )}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsAdminModalOpen(true)}
+            className="flex items-center gap-1.5 rounded-xl border border-orange-500/50 bg-orange-500/10 px-3 py-1.5 text-xs font-bold text-orange-400 transition-colors hover:bg-orange-500/20 active:scale-95"
+          >
+            <span>⚙️</span>
+            <span>Управление и статистика</span>
+          </button>
+        </div>
+      )}
+
       {/* Если пользователь заколдован — оверлей с разбитым экраном */}
       {state?.is_cursed && (
         <BrokenGlassOverlay
@@ -370,6 +433,10 @@ export default function HalloweenTapalka() {
             onStateUpdate={(st) => setState(st)}
           />
         </>
+      )}
+
+      {isAdmin && (
+        <HalloweenAdminModal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} />
       )}
     </div>
   );
