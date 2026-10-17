@@ -184,6 +184,8 @@ const START_PARAM_ROUTES: Array<{ re: RegExp; to: (match: RegExpExecArray) => st
   // Dedicated servers section & new order flow
   { re: /^(servers|dedicated_servers)$/, to: () => '/servers' },
   { re: /^(servers_new|dedicated_servers_new)$/, to: () => '/servers/new' },
+  // Halloween event startapp deep link
+  { re: /^halloween/, to: () => '/halloween' },
   // Paid-trial «Активировать триал» link in the bot's rich main menu — the
   // dashboard renders TrialOfferCard with the pay-and-activate flow.
   { re: /^trial$/, to: () => '/' },

@@ -44,6 +44,8 @@ import { isMobileNavScreen, mobileNavItems } from './mobileNavRoutes';
 import { AppHeader } from './AppHeader';
 import { LogoutButton } from './LogoutButton';
 import { useBackgroundConsumer } from '@/components/backgrounds/BackgroundHost';
+import { HalloweenBannerModal } from '@/components/halloween/HalloweenBannerModal';
+import { HalloweenFloatingButton } from '@/components/halloween/HalloweenFloatingButton';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -99,6 +101,7 @@ export function AppShell({ children }: AppShellProps) {
   const desktopNav = [
     { path: '/', label: t('nav.dashboard'), icon: HomeIcon },
     { path: '/subscriptions', label: t('nav.subscription'), icon: SubscriptionIcon },
+    { path: '/halloween', label: 'Хэллоуин 🎃', icon: GiftIcon },
     { path: '/servers', label: t('nav.servers', 'Личные серверы'), icon: ServerIcon },
     { path: '/balance', label: t('nav.balance'), icon: CreditCardIcon },
     ...(referralEnabled ? [{ path: '/referral', label: t('nav.referral'), icon: UsersIcon }] : []),
@@ -289,6 +292,10 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Mobile Bottom Navigation — только на экранах её кнопок */}
       {showMobileNav && <MobileBottomNav items={navItems} isMenuOpen={mobileMenuOpen} />}
+
+      {/* Хэллоуинский ивент: всплывающий баннер и плавающая кнопка */}
+      <HalloweenBannerModal />
+      <HalloweenFloatingButton />
     </div>
   );
 }

@@ -88,6 +88,7 @@ const LinkTelegramCallback = lazyWithRetry(() => import('./pages/LinkTelegramCal
 const MergeAccounts = lazyWithRetry(() => import('./pages/MergeAccounts'));
 const DedicatedServers = lazyWithRetry(() => import('./pages/DedicatedServers'));
 const DedicatedServerOrder = lazyWithRetry(() => import('./pages/DedicatedServerOrder'));
+const HalloweenTapalka = lazyWithRetry(() => import('./pages/HalloweenTapalka'));
 
 // Admin pages - lazy load (only for admins)
 const AdminPanel = lazyWithRetry(() => import('./pages/AdminPanel'));
@@ -649,6 +650,26 @@ function App() {
             <ProtectedRoute>
               <LazyPage>
                 <InfoPageView />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/halloween"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <HalloweenTapalka />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cabinet/halloween"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <HalloweenTapalka />
               </LazyPage>
             </ProtectedRoute>
           }
