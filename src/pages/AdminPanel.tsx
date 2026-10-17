@@ -7,6 +7,7 @@ import { statsApi, type SystemInfo, type DashboardStats } from '@/api/admin';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
 import { useTelegramSDK } from '@/hooks/useTelegramSDK';
 import { cn } from '@/lib/utils';
+import { HalloweenAdminBanner } from '@/components/halloween/HalloweenAdminBanner';
 import {
   ArrowUpIcon,
   BellIcon,
@@ -806,6 +807,9 @@ export default function AdminPanel() {
             </kbd>
           </div>
         </div>
+
+        {/* Хэллоуинский ивент баннер-виджет управления */}
+        <HalloweenAdminBanner />
 
         {/* Grid */}
         <div className="scrollbar-hide min-h-0 flex-1 overflow-auto pb-4">

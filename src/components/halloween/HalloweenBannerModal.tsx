@@ -29,6 +29,15 @@ export function HalloweenBannerModal() {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  // Слушатель для принудительного открытия баннера из админки (кнопка предпросмотра)
+  useEffect(() => {
+    const handleForceOpen = () => {
+      setIsOpen(true);
+    };
+    window.addEventListener('open-halloween-banner', handleForceOpen);
+    return () => window.removeEventListener('open-halloween-banner', handleForceOpen);
+  }, []);
+
   const handleClose = () => {
     setIsOpen(false);
     // Запоминаем закрытие на 12 часов

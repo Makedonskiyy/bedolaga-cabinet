@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
 import { useAuthStore } from '@/store/auth';
+import { usePermissionStore } from '@/store/permissions';
 import { useHaptic } from '@/platform';
 import { useTelegramSDK } from '@/hooks/useTelegramSDK';
 import { useHeaderHeight } from '@/hooks/useHeaderHeight';
@@ -56,6 +57,11 @@ export function AppShell({ children }: AppShellProps) {
   const { t } = useTranslation();
   const location = useLocation();
   const isAdmin = useAuthStore((state) => state.isAdmin);
+  const user = useAuthStore((state) => state.user);
+  const roleLevel = usePermissionStore((state) => state.roleLevel);
+  const effectiveIsAdmin = Boolean(
+    isAdmin || (user as { is_admin?: boolean } | null)?.is_admin || roleLevel > 0,
+  );
   const logout = useAuthStore((state) => state.logout);
   const { isFullscreen, safeAreaInset, contentSafeAreaInset, platform, isMobile } =
     useTelegramSDK();
@@ -86,7 +92,7 @@ export function AppShell({ children }: AppShellProps) {
     queryFn: halloweenApi.getConfig,
     staleTime: 1000 * 30,
   });
-  const canAccessHalloween = Boolean(halloweenConfig?.is_enabled || isAdmin);
+  const canAccessHalloween = Boolean(halloweenConfig?.is_enabled || effectiveIsAdmin);
 
   // Only apply fullscreen UI adjustments on mobile Telegram (iOS/Android)
   const isMobileFullscreen = isFullscreen && isMobile;
@@ -229,7 +235,7 @@ export function AppShell({ children }: AppShellProps) {
               колонкой grid (justify-self-center), а не auto-margin'ами. */}
           <nav className="flex items-center gap-0.5 justify-self-center rounded-full border border-dark-800/70 bg-dark-900/50 p-1 shadow-sm backdrop-blur-sm">
             {desktopNav.map((item) => renderNavLink(item.path, item.label, item.icon))}
-            {isAdmin && (
+            {effectiveIsAdmin && (
               <>
                 <div className="mx-1 h-5 w-px shrink-0 bg-dark-700/60" />
                 {renderNavLink('/admin', t('admin.nav.title'), ShieldIcon, true)}
