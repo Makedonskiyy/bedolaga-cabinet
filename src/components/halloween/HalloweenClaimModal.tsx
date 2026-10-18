@@ -13,7 +13,7 @@ const REWARD_OPTIONS = [
   { days: 1, minutes: 1440, label: '1 день VPN' },
   { days: 3, minutes: 4320, label: '3 дня VPN' },
   { days: 7, minutes: 10080, label: '7 дней VPN' },
-  { days: 14, minutes: 20160, label: '14 дней VPN (Макс)' },
+  { days: 14, minutes: 20160, label: '14 дней VPN (Максимум)' },
 ];
 
 export function HalloweenClaimModal({
@@ -51,24 +51,23 @@ export function HalloweenClaimModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-3xl border border-orange-500/40 bg-zinc-950 p-6 shadow-[0_0_50px_rgba(249,115,22,0.3)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-200 select-none">
+      <div className="relative mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-[28px] border border-white/10 bg-neutral-950/90 p-6 sm:p-8 backdrop-blur-2xl">
         {/* Закрыть */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 hover:text-white"
+          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white"
         >
           <XIcon className="h-5 w-5" />
         </button>
 
-        <div className="mb-4 text-center">
-          <div className="mb-2 text-5xl">🎁</div>
-          <h2 className="text-2xl font-black text-white">Обмен на дни VPN</h2>
-          <p className="mt-1 text-xs text-zinc-400">
+        <div className="mb-5 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">Обмен на дни VPN</h2>
+          <p className="mt-1.5 text-sm text-white/60">
             Доступно к обмену:{' '}
             <span className="font-bold text-orange-400">{state.available_minutes} минут</span>
           </p>
-          <p className="text-2xs text-zinc-500">
+          <p className="text-xs text-white/40">
             Получено за ивент: {state.claimed_days} из {state.max_claimable_days} дн.
           </p>
         </div>
@@ -85,7 +84,7 @@ export function HalloweenClaimModal({
           </div>
         )}
 
-        <div className="mb-5 space-y-2.5">
+        <div className="mb-6 space-y-2.5">
           {REWARD_OPTIONS.map((opt) => {
             const canAfford = state.available_minutes >= opt.minutes;
             const fitsLimit = opt.days <= remainingDaysAllowed;
@@ -98,21 +97,21 @@ export function HalloweenClaimModal({
                 disabled={!isAvailable}
                 className={`flex w-full items-center justify-between rounded-2xl border p-3.5 text-left transition-all ${
                   selectedDays === opt.days
-                    ? 'border-orange-500 bg-orange-500/15 text-orange-400 shadow-md'
-                    : 'border-zinc-800 bg-zinc-900/60 text-zinc-300'
-                } ${!isAvailable ? 'cursor-not-allowed opacity-40' : 'hover:border-zinc-700'}`}
+                    ? 'border-orange-500/60 bg-orange-500/15 text-orange-400'
+                    : 'border-white/10 bg-neutral-900/60 text-white/80'
+                } ${!isAvailable ? 'cursor-not-allowed opacity-40' : 'hover:border-white/20'}`}
               >
                 <div>
-                  <div className="font-bold text-sm text-white">{opt.label}</div>
-                  <div className="text-xs text-zinc-400">{opt.minutes.toLocaleString()} минут</div>
+                  <div className="font-bold text-base text-white">{opt.label}</div>
+                  <div className="text-xs text-white/50">{opt.minutes.toLocaleString()} минут</div>
                 </div>
                 <div className="text-xs font-semibold">
                   {!fitsLimit ? (
-                    <span className="text-zinc-500">Лимит исчерпан</span>
+                    <span className="text-white/40">Лимит исчерпан</span>
                   ) : !canAfford ? (
                     <span className="text-red-400">Не хватает минут</span>
                   ) : (
-                    <span className="text-emerald-400">Доступно</span>
+                    <span className="text-orange-400">Доступно</span>
                   )}
                 </div>
               </button>
@@ -123,9 +122,9 @@ export function HalloweenClaimModal({
         <button
           onClick={handleClaim}
           disabled={isLoading || remainingDaysAllowed <= 0}
-          className="w-full rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 py-3.5 text-base font-bold text-zinc-950 shadow-lg shadow-orange-500/30 transition-transform active:scale-95 disabled:opacity-50"
+          className="w-full rounded-full bg-orange-500 py-3.5 px-8 text-base font-bold text-orange-950 transition hover:bg-orange-400 active:scale-95 disabled:opacity-50"
         >
-          {isLoading ? 'Активируем подписку...' : `Активировать +${selectedDays} дн. VPN`}
+          {isLoading ? 'Активируем...' : `Активировать +${selectedDays} дн. VPN`}
         </button>
       </div>
     </div>

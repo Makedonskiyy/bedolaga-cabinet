@@ -55,8 +55,8 @@ export function HalloweenAdminModal({ isOpen, onClose }: HalloweenAdminModalProp
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-3 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative my-6 max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-orange-500/40 bg-zinc-950 p-5 shadow-[0_0_60px_rgba(249,115,22,0.3)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/85 p-3 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative my-6 max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[28px] border border-white/10 bg-neutral-950/95 p-6 backdrop-blur-2xl">
         {/* Кнопка закрытия */}
         <button
           onClick={onClose}

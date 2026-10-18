@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useHaptic, usePlatform } from '@/platform';
 import { useAuthStore } from '@/store/auth';
+import { usePermissionStore } from '@/store/permissions';
 import { halloweenApi, type HalloweenStateResponse } from '@/api/halloween';
 import { HalloweenTrickOrTreatModal } from '@/components/halloween/HalloweenTrickOrTreatModal';
 import { HalloweenClaimModal } from '@/components/halloween/HalloweenClaimModal';
@@ -20,6 +21,11 @@ export default function HalloweenTapalka() {
   const haptic = useHaptic();
   const { openTelegramLink } = usePlatform();
   const isAdmin = useAuthStore((state) => state.isAdmin);
+  const user = useAuthStore((state) => state.user);
+  const roleLevel = usePermissionStore((state) => state.roleLevel);
+  const effectiveIsAdmin = Boolean(
+    isAdmin || (user as { is_admin?: boolean } | null)?.is_admin || roleLevel > 0,
+  );
 
   // Конфиг видимости
   const { data: config, isLoading: isConfigLoading } = useQuery({
@@ -28,7 +34,7 @@ export default function HalloweenTapalka() {
     staleTime: 1000 * 30,
   });
 
-  const canAccess = Boolean(config?.is_enabled || isAdmin);
+  const canAccess = Boolean(config?.is_enabled || effectiveIsAdmin);
 
   // Состояние с бэкенда
   const { data: serverState, refetch } = useQuery({
@@ -66,7 +72,6 @@ export default function HalloweenTapalka() {
 
   useEffect(() => {
     const updateCountdown = () => {
-      if (!state?.event_remaining_seconds && state?.event_remaining_seconds !== 0) return;
       const targetTime = new Date('2026-11-03T20:59:59Z').getTime();
       const diff = Math.max(0, targetTime - Date.now());
 
@@ -75,13 +80,13 @@ export default function HalloweenTapalka() {
       const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const secs = Math.floor((diff % (1000 * 60)) / 1000);
 
-      setEventCountdown(`${days} дн. ${hours} ч. ${mins} мин. ${secs} сек.`);
+      setEventCountdown(`${days} дней ${hours * 60 + mins} минут ${secs} сек`);
     };
 
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [state?.event_remaining_seconds]);
+  }, []);
 
   // Локальная регенерация энергии каждую секунду
   useEffect(() => {
@@ -133,7 +138,7 @@ export default function HalloweenTapalka() {
       clientY = e.clientY;
     }
 
-    const randomAngle = Math.floor(Math.random() * 40) - 20; // от -20 до +20 градусов
+    const randomAngle = Math.floor(Math.random() * 40) - 20;
     const tapVal = state.profit_per_tap;
 
     const newTap: FloatingTap = {
@@ -146,10 +151,9 @@ export default function HalloweenTapalka() {
 
     setFloatingTaps((prev) => [...prev.slice(-15), newTap]);
 
-    // Удаляем вылетевшую цифру через 1 сек
     setTimeout(() => {
       setFloatingTaps((prev) => prev.filter((item) => item.id !== newTap.id));
-    }, 900);
+    }, 800);
 
     // Оптимистичное обновление
     setState((prev) => {
@@ -212,54 +216,47 @@ export default function HalloweenTapalka() {
     return (
       <div className="relative mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center p-6 text-center select-none">
         <div className="relative mb-6">
-          <img
-            src="/halloween/pumpkin.png"
-            alt="Halloween"
-            className="h-32 w-32 object-contain drop-shadow-[0_0_30px_rgba(249,115,22,0.4)] animate-pulse"
-          />
+          <img src="/halloween/pumpkin.png" alt="Halloween" className="h-32 w-32 object-contain" />
         </div>
-        <h2 className="text-2xl font-black text-orange-500 drop-shadow-sm">
-          Ивент скоро начнется! 🎃
-        </h2>
-        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-          Хэллоуинская активность пока находится на стадии подготовки. Скоро тыква оживет, и
-          откроется доступ к фарму минут и ценным наградам!
+        <h2 className="text-2xl font-bold text-white">Ивент скоро начнется</h2>
+        <p className="mt-3 text-sm leading-relaxed text-white/50">
+          Хэллоуинская активность пока находится на стадии подготовки. Скоро откроется доступ к
+          фарму минут и ценным наградам!
         </p>
       </div>
     );
   }
 
   return (
-    <div className="relative mx-auto flex min-h-[90vh] max-w-lg flex-col items-center justify-between pb-24 pt-3 select-none">
-      {/* Панель администратора */}
-      {isAdmin && (
-        <div className="mb-3 flex w-full items-center justify-between rounded-2xl border border-orange-500/40 bg-zinc-900/90 px-3.5 py-2 shadow-lg backdrop-blur-md">
-          <div className="flex items-center gap-2">
-            <span className="text-base">👑</span>
-            <div className="text-left">
-              <div className="text-3xs font-extrabold uppercase tracking-wider text-orange-400">
-                Админ-режим
-              </div>
-              <div className="text-2xs font-semibold text-zinc-300">
-                {config?.is_enabled ? (
-                  <span className="text-emerald-400">● Включен для всех</span>
-                ) : (
-                  <span className="text-amber-400">● Скрыт (только админы)</span>
-                )}
-              </div>
+    <div className="relative mx-auto flex min-h-[92vh] max-w-lg flex-col items-center justify-between pb-24 pt-3 select-none">
+      {/* Мягкий фоновый градиент сверху как в Figma */}
+      <div className="pointer-events-none absolute left-0 right-0 top-0 h-96 bg-gradient-to-b from-orange-500/20 via-orange-500/5 to-transparent" />
+
+      {/* Панель администратора (жидкое стекло без свечения) */}
+      {effectiveIsAdmin && (
+        <div className="relative z-10 mb-3 flex w-full items-center justify-between rounded-2xl border border-white/10 bg-neutral-900/70 px-4 py-2.5 backdrop-blur-xl">
+          <div className="text-left">
+            <div className="text-xs font-bold uppercase tracking-wider text-orange-400">
+              Админ-режим
+            </div>
+            <div className="text-xs text-white/60">
+              {config?.is_enabled ? (
+                <span className="text-emerald-400">Включен для всех</span>
+              ) : (
+                <span className="text-amber-400">Скрыт от пользователей</span>
+              )}
             </div>
           </div>
           <button
             onClick={() => setIsAdminModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl border border-orange-500/50 bg-orange-500/10 px-3 py-1.5 text-xs font-bold text-orange-400 transition-colors hover:bg-orange-500/20 active:scale-95"
+            className="rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10 active:scale-95"
           >
-            <span>⚙️</span>
-            <span>Управление и статистика</span>
+            Управление
           </button>
         </div>
       )}
 
-      {/* Если пользователь заколдован — оверлей с разбитым экраном */}
+      {/* Оверлей при проклятии */}
       {state?.is_cursed && (
         <BrokenGlassOverlay
           onShare={handleShareAndUncurse}
@@ -268,64 +265,66 @@ export default function HalloweenTapalka() {
         />
       )}
 
-      {/* Верхний блок: Баланс заработанных минут */}
-      <div className="w-full text-center">
-        <span className="text-xs font-semibold tracking-wider text-zinc-400 uppercase">
-          Заработано:
-        </span>
-        <div className="mt-1 flex items-center justify-center gap-2">
-          <img src="/halloween/pumpkin-coin.svg" alt="Pumpkin" className="h-9 w-9 drop-shadow-md" />
-          <span className="text-4xl font-black text-orange-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.4)]">
-            {state ? state.available_minutes.toLocaleString() : '...'}
-          </span>
-          <span className="text-xl font-bold text-orange-400">минут</span>
-        </div>
+      {/* Верхний блок: Выравнивание строго СЛЕВА как в Figma */}
+      <div className="relative z-10 w-full px-4 text-left">
+        <div className="text-2xl sm:text-3xl font-bold text-white">Заработано:</div>
 
-        <p className="mx-auto mt-2 max-w-xs text-xs font-medium leading-relaxed text-zinc-400">
-          Хэллоуинский ивент — тапай тыкву, прокачивай уровень и забирай до 14 дней VPN, скидки и
-          промокоды!
-        </p>
-      </div>
-
-      {/* Сетка 4 карточек статистики */}
-      <div className="mt-4 grid w-full grid-cols-2 gap-2.5 px-2">
-        {/* Карточка 1: Таймер */}
-        <div className="flex flex-col justify-between rounded-2xl border border-orange-500/25 bg-orange-500/10 p-3 shadow-inner">
-          <span className="text-2xs font-semibold text-zinc-400">Закончится через:</span>
-          <div className="mt-1 font-mono text-xs font-bold text-orange-400">
-            {eventCountdown || 'Вычисление...'}
+        <div className="mt-1.5 flex items-center gap-2">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+            <img src="/halloween/pumpkin-coin.svg" alt="Тыква" className="h-9 w-9 object-contain" />
+          </div>
+          <div className="text-3xl sm:text-4xl font-bold text-orange-500">
+            {state ? state.available_minutes.toLocaleString() : '...'} минут
           </div>
         </div>
 
-        {/* Карточка 2: Уровень и улучшение */}
-        <div className="flex flex-col justify-between rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3">
+        <p className="mt-2 text-sm sm:text-base font-normal leading-relaxed text-white/50">
+          Хэллуинский инвент — мы запустили уникальное событие, с помщоью которго вы можете
+          заработать минуты ВПН, выбить промоклды, скидки. Просто тапая тыкву
+        </p>
+      </div>
+
+      {/* Сетка 4 карточек статистики: Жидкое стекло (liquid glass) */}
+      <div className="relative z-10 mt-5 grid w-full grid-cols-2 gap-3 px-4">
+        {/* Карточка 1: Закончится через (жидкое стекло с теплым оттенком) */}
+        <div className="flex min-h-[96px] flex-col justify-between rounded-[20px] border border-orange-500/20 bg-orange-500/10 p-3.5 backdrop-blur-xl text-left">
+          <span className="text-sm font-normal text-white/50">Закончится через:</span>
+          <div className="font-bold text-lg sm:text-xl text-orange-500 leading-tight">
+            {eventCountdown || '8 дней 27 минут 32 сек'}
+          </div>
+        </div>
+
+        {/* Карточка 2: Ваш уровень (белая иконка призрака + аккуратная кнопка) */}
+        <div className="flex min-h-[96px] flex-col justify-between rounded-[20px] border border-white/10 bg-neutral-900/60 p-3.5 backdrop-blur-xl text-left">
           <div className="flex items-center justify-between">
-            <span className="text-2xs font-semibold text-zinc-400">Ваш уровень</span>
+            <span className="text-sm font-normal text-white/50">Ваш уровень</span>
             {state?.upgrade_cost !== null && state?.upgrade_cost !== undefined && (
               <button
                 onClick={handleUpgrade}
                 disabled={
                   upgradeLoading || (state?.available_minutes || 0) < (state?.upgrade_cost || 0)
                 }
-                className="rounded-lg bg-orange-500 px-2 py-0.5 text-2xs font-bold text-zinc-950 transition-transform active:scale-95 disabled:opacity-40"
+                className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-stone-900 transition hover:bg-orange-400 active:scale-95 disabled:opacity-40"
               >
-                {upgradeLoading ? '...' : `+1 за ${state.upgrade_cost}м`}
+                {upgradeLoading ? '...' : `за ${state.upgrade_cost} минут`}
               </button>
             )}
           </div>
-          <div className="mt-1 flex items-center gap-1.5">
-            <img src="/halloween/ghost.svg" alt="Level" className="h-4 w-4" />
-            <span className="text-xs font-bold text-white">{state?.level_name || 'Первый'}</span>
+          <div className="mt-1 flex items-center gap-2">
+            <img src="/halloween/ghost.svg" alt="Уровень" className="h-5 w-5 brightness-200" />
+            <span className="text-lg sm:text-xl font-bold text-white">
+              {state?.level_name || 'Первый'}
+            </span>
           </div>
         </div>
 
         {/* Карточка 3: Прибыль за тап */}
-        <div className="flex flex-col justify-between rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3">
-          <span className="text-2xs font-semibold text-zinc-400">Прибыль за тап</span>
-          <div className="mt-1 flex items-center gap-1 text-sm font-black text-white">
+        <div className="flex min-h-[96px] flex-col justify-between rounded-[20px] border border-white/10 bg-neutral-900/60 p-3.5 backdrop-blur-xl text-left">
+          <span className="text-sm font-normal text-white/50">Прибыль за тап</span>
+          <div className="mt-1 flex items-center gap-1.5 text-xl sm:text-2xl font-bold text-white">
             <span>+{state?.profit_per_tap || 1}</span>
             {state?.is_boosted && (
-              <span className="rounded bg-amber-500/20 px-1 text-2xs font-bold text-amber-400">
+              <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-xs font-bold text-orange-400 border border-orange-500/30">
                 x2
               </span>
             )}
@@ -333,52 +332,47 @@ export default function HalloweenTapalka() {
         </div>
 
         {/* Карточка 4: Доход в час */}
-        <div className="flex flex-col justify-between rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3">
-          <span className="text-2xs font-semibold text-zinc-400">Доход в час</span>
-          <div className="mt-1 text-sm font-black text-white">
+        <div className="flex min-h-[96px] flex-col justify-between rounded-[20px] border border-white/10 bg-neutral-900/60 p-3.5 backdrop-blur-xl text-left">
+          <span className="text-sm font-normal text-white/50">Доход в час</span>
+          <div className="mt-1 text-xl sm:text-2xl font-bold text-white">
             {state?.passive_per_hour || 15} минут
           </div>
         </div>
       </div>
 
-      {/* Быстрые действия: Сладость или гадость & Обмен */}
-      <div className="mt-3 flex w-full gap-2 px-2">
+      {/* Аккуратные кнопки действий: Сладость или гадость & Забрать VPN */}
+      <div className="relative z-10 mt-4 flex w-full gap-2.5 px-4">
         <button
           onClick={() => setIsTotOpen(true)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-orange-500/40 bg-gradient-to-r from-orange-500/20 to-amber-500/20 py-2.5 text-xs font-bold text-orange-300 transition-transform active:scale-95"
+          className="flex flex-1 items-center justify-center rounded-full border border-white/10 bg-neutral-900/70 py-3.5 px-4 text-sm font-bold text-white backdrop-blur-xl transition hover:bg-neutral-800/80 active:scale-95"
         >
-          <span>🎃</span>
           <span>Сладость или гадость</span>
           {state?.can_play_trick_or_treat && (
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="ml-2 h-2 w-2 rounded-full bg-orange-500" />
           )}
         </button>
 
         <button
           onClick={() => setIsClaimOpen(true)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 py-2.5 text-xs font-bold text-emerald-300 transition-transform active:scale-95"
+          className="flex flex-1 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/15 py-3.5 px-4 text-sm font-bold text-orange-400 backdrop-blur-xl transition hover:bg-orange-500/25 active:scale-95"
         >
-          <span>🎁</span>
           <span>Забрать VPN ({state?.claimed_days || 0}/14 дн.)</span>
         </button>
       </div>
 
-      {/* Центр: Большая тыква для тапалки */}
-      <div className="relative my-auto flex items-center justify-center py-4">
+      {/* Центр: Большая тыква для тапалки (чистая без ядовитого свечения) */}
+      <div className="relative my-auto flex items-center justify-center py-6">
         <div
           ref={pumpkinRef}
           onClick={handleTap}
           onTouchStart={handleTap}
-          className="group relative flex h-64 w-64 cursor-pointer items-center justify-center transition-transform active:scale-90"
+          className="group relative flex h-64 w-64 cursor-pointer items-center justify-center transition-transform active:scale-95 select-none"
         >
-          {/* Свечение за тыквой */}
-          <div className="absolute inset-0 rounded-full bg-orange-500/20 blur-3xl transition-opacity group-active:opacity-80" />
-
-          {/* Изображение тыквы */}
+          {/* Изображение тыквы строго по макету */}
           <img
             src="/halloween/pumpkin.png"
-            alt="Tap Pumpkin"
-            className="relative z-10 h-56 w-56 object-contain drop-shadow-[0_15px_30px_rgba(249,115,22,0.35)] transition-transform select-none"
+            alt="Тыква"
+            className="h-60 w-60 object-contain select-none"
             draggable={false}
           />
 
@@ -391,7 +385,7 @@ export default function HalloweenTapalka() {
                 top: `${tap.y}px`,
                 transform: `rotate(${tap.rotation}deg)`,
               }}
-              className="pointer-events-none absolute z-20 font-black text-3xl text-orange-300 drop-shadow-[0_0_8px_rgba(249,115,22,0.9)] animate-out fade-out slide-out-to-top-12 duration-700"
+              className="pointer-events-none absolute z-20 font-bold text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] animate-out fade-out slide-out-to-top-12 duration-700"
             >
               +{tap.value}
             </span>
@@ -399,26 +393,26 @@ export default function HalloweenTapalka() {
         </div>
       </div>
 
-      {/* Нижняя полоса энергии */}
-      <div className="w-full px-4">
-        <div className="mb-1.5 flex items-center justify-between text-xs font-semibold text-zinc-400">
-          <span className="flex items-center gap-1">⚡ Энергия</span>
-          <span className="font-mono text-orange-400">
+      {/* Нижняя полоса энергии (чистое стекло) */}
+      <div className="relative z-10 w-full px-6">
+        <div className="mb-2 flex items-center justify-between text-xs font-medium text-white/50">
+          <span>Энергия</span>
+          <span className="font-semibold text-white/80">
             {state?.energy || 0} / {state?.max_energy || 1000}
           </span>
         </div>
 
-        <div className="h-3 w-full overflow-hidden rounded-full bg-zinc-800/80 p-0.5">
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10 p-0.5 backdrop-blur-sm">
           <div
             style={{
               width: `${Math.min(100, Math.max(0, ((state?.energy || 0) / (state?.max_energy || 1000)) * 100))}%`,
             }}
-            className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400 shadow-md transition-all duration-300"
+            className="h-full rounded-full bg-orange-500 transition-all duration-300"
           />
         </div>
       </div>
 
-      {/* Модалки */}
+      {/* Модальные окна */}
       {state && (
         <>
           <HalloweenTrickOrTreatModal
@@ -435,7 +429,7 @@ export default function HalloweenTapalka() {
         </>
       )}
 
-      {isAdmin && (
+      {effectiveIsAdmin && (
         <HalloweenAdminModal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} />
       )}
     </div>

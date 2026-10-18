@@ -21,7 +21,7 @@ export function HalloweenBannerModal() {
       return;
     }
 
-    // Небольшая задержка перед показом для плавности
+    // Задержка перед показом для плавности
     const timer = setTimeout(() => {
       setIsOpen(true);
     }, 600);
@@ -52,52 +52,49 @@ export function HalloweenBannerModal() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative mx-auto flex w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-orange-500/40 bg-zinc-950 shadow-[0_0_50px_rgba(249,115,22,0.3)]">
-        {/* Кнопка закрыть */}
+    <div className="fixed inset-0 z-[100] flex flex-col justify-between overflow-hidden bg-zinc-950 animate-in fade-in duration-300 select-none">
+      {/* Полноэкранный арт Хэллоуина */}
+      <img
+        src="/halloween.png"
+        alt="Хэллоуинский ивент"
+        className="absolute inset-0 h-full w-full object-cover object-center"
+      />
+
+      {/* Мягкий градиент для читаемости текста внизу */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-black/20 pointer-events-none" />
+
+      {/* Кнопка закрытия в правом верхнем углу (круглый жидкий бейдж) */}
+      <button
+        onClick={handleClose}
+        className="absolute right-4 top-4 sm:right-6 sm:top-6 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 transition-transform hover:bg-black/70 active:scale-90"
+        aria-label="Закрыть"
+      >
+        <XIcon className="h-6 w-6" />
+      </button>
+
+      {/* Пустой распорочный верх */}
+      <div className="relative z-10 w-full" />
+
+      {/* Нижний блок с описанием и кнопкой строго по макету */}
+      <div className="relative z-10 mx-auto flex w-full max-w-xl flex-col items-center px-6 pb-10 sm:pb-14 text-center">
+        <p className="mb-6 max-w-lg text-base sm:text-2xl font-medium leading-relaxed text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+          Тапай тыкву, прокачивай уровень и выбивай бесплатный VPN до 14 дней, промокоды и бусты в
+          мини-игре «Сладость или гадость»!
+        </p>
+
         <button
-          onClick={handleClose}
-          className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-zinc-300 backdrop-blur-md transition-colors hover:bg-black/90 hover:text-white"
-          aria-label="Закрыть"
+          onClick={handleGoToEvent}
+          className="w-full max-w-xs sm:max-w-sm rounded-full bg-orange-500 py-4 px-8 text-center text-xl sm:text-2xl font-bold text-orange-950 transition-all hover:bg-orange-400 active:scale-95 shadow-lg shadow-black/40"
         >
-          <XIcon className="h-5 w-5" />
+          Перейти к ивенту
         </button>
 
-        {/* Изображение баннера */}
-        <div className="relative aspect-[16/9] w-full overflow-hidden bg-zinc-900">
-          <img
-            src="/halloween/banner.png"
-            alt="Halloween Event"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
-        </div>
-
-        {/* Описание и призыв */}
-        <div className="flex flex-col p-6 text-center">
-          <h2 className="mb-2 text-2xl font-black text-orange-400">
-            🎃 Хэллоуинский ивент Triton VPN!
-          </h2>
-          <p className="mb-5 text-sm text-zinc-300">
-            Тапай тыкву, прокачивай уровень и выбивай бесплатный VPN до 14 дней, промокоды и бусты в
-            мини-игре «Сладость или гадость»!
-          </p>
-
-          <div className="flex flex-col gap-2.5">
-            <button
-              onClick={handleGoToEvent}
-              className="w-full rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 py-3.5 text-base font-bold text-zinc-950 shadow-lg shadow-orange-500/30 transition-transform active:scale-98"
-            >
-              🚀 Перейти к ивенту
-            </button>
-            <button
-              onClick={handleClose}
-              className="w-full py-2 text-xs text-zinc-400 transition-colors hover:text-zinc-200"
-            >
-              Позже
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={handleClose}
+          className="mt-3 py-1.5 text-xs text-white/50 transition-colors hover:text-white"
+        >
+          Закрыть
+        </button>
       </div>
     </div>
   );
