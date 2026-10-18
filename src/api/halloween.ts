@@ -102,64 +102,102 @@ export interface HalloweenAdminStatsResponse {
   }>;
 }
 
+async function getWithFallback<T>(cabinetPath: string, legacyPath: string): Promise<T> {
+  try {
+    const res = await apiClient.get<T>(cabinetPath);
+    return res.data;
+  } catch (err: unknown) {
+    const status = (err as { response?: { status?: number } })?.response?.status;
+    if (status === 404) {
+      const res = await apiClient.get<T>(legacyPath);
+      return res.data;
+    }
+    throw err;
+  }
+}
+
+async function postWithFallback<T>(
+  cabinetPath: string,
+  legacyPath: string,
+  data?: unknown,
+): Promise<T> {
+  try {
+    const res = await apiClient.post<T>(cabinetPath, data);
+    return res.data;
+  } catch (err: unknown) {
+    const status = (err as { response?: { status?: number } })?.response?.status;
+    if (status === 404) {
+      const res = await apiClient.post<T>(legacyPath, data);
+      return res.data;
+    }
+    throw err;
+  }
+}
+
 export const halloweenApi = {
   getConfig: async (): Promise<HalloweenConfigResponse> => {
-    const response = await apiClient.get<HalloweenConfigResponse>('/halloween/config');
-    return response.data;
+    return getWithFallback<HalloweenConfigResponse>(
+      '/cabinet/halloween/config',
+      '/halloween/config',
+    );
   },
 
   getState: async (): Promise<HalloweenStateResponse> => {
-    const response = await apiClient.get<HalloweenStateResponse>('/halloween/state');
-    return response.data;
+    return getWithFallback<HalloweenStateResponse>('/cabinet/halloween/state', '/halloween/state');
   },
 
   tap: async (count: number): Promise<HalloweenStateResponse> => {
-    const response = await apiClient.post<HalloweenStateResponse>('/halloween/tap', { count });
-    return response.data;
+    return postWithFallback<HalloweenStateResponse>('/cabinet/halloween/tap', '/halloween/tap', {
+      count,
+    });
   },
 
   upgrade: async (): Promise<HalloweenStateResponse> => {
-    const response = await apiClient.post<HalloweenStateResponse>('/halloween/upgrade');
-    return response.data;
+    return postWithFallback<HalloweenStateResponse>(
+      '/cabinet/halloween/upgrade',
+      '/halloween/upgrade',
+    );
   },
 
   playTrickOrTreat: async (chosen_pumpkin: number): Promise<TrickOrTreatResultResponse> => {
-    const response = await apiClient.post<TrickOrTreatResultResponse>('/halloween/trick-or-treat', {
-      chosen_pumpkin,
-    });
-    return response.data;
+    return postWithFallback<TrickOrTreatResultResponse>(
+      '/cabinet/halloween/trick-or-treat',
+      '/halloween/trick-or-treat',
+      { chosen_pumpkin },
+    );
   },
 
   uncurse: async (): Promise<UncurseResponse> => {
-    const response = await apiClient.post<UncurseResponse>('/halloween/uncurse');
-    return response.data;
+    return postWithFallback<UncurseResponse>('/cabinet/halloween/uncurse', '/halloween/uncurse');
   },
 
   claimReward: async (days: number): Promise<ClaimRewardResponse> => {
-    const response = await apiClient.post<ClaimRewardResponse>('/halloween/claim', { days });
-    return response.data;
+    return postWithFallback<ClaimRewardResponse>('/cabinet/halloween/claim', '/halloween/claim', {
+      days,
+    });
   },
 
   getAdminStats: async (): Promise<HalloweenAdminStatsResponse> => {
-    const response = await apiClient.get<HalloweenAdminStatsResponse>('/halloween/admin/stats');
-    return response.data;
+    return getWithFallback<HalloweenAdminStatsResponse>(
+      '/cabinet/halloween/admin/stats',
+      '/halloween/admin/stats',
+    );
   },
 
   toggleEvent: async (
     enabled: boolean,
   ): Promise<{ success: boolean; is_enabled: boolean; message: string }> => {
-    const response = await apiClient.post<{
+    return postWithFallback<{
       success: boolean;
       is_enabled: boolean;
       message: string;
-    }>('/halloween/admin/toggle', { enabled });
-    return response.data;
+    }>('/cabinet/halloween/admin/toggle', '/halloween/admin/toggle', { enabled });
   },
 
   sendAdminReport: async (): Promise<{ success: boolean; message: string }> => {
-    const response = await apiClient.post<{ success: boolean; message: string }>(
+    return postWithFallback<{ success: boolean; message: string }>(
+      '/cabinet/halloween/admin/send-report',
       '/halloween/admin/send-report',
     );
-    return response.data;
   },
 };
