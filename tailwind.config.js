@@ -213,6 +213,11 @@ export default {
         'unlimited-flow': 'unlimitedFlow 3s ease-in-out infinite',
         'unlimited-pulse': 'unlimitedPulse 2s ease-in-out infinite',
         'trial-glow': 'trialGlow 3s ease-in-out infinite',
+        // Halloween "гадость" jumpscare
+        'jumpscare-shake': 'jumpscareShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both',
+        'jumpscare-flash': 'jumpscareFlash 0.6s ease-out forwards',
+        'web-crawl': 'webCrawl 0.7s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'ghost-pop': 'ghostPop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both',
       },
       keyframes: {
         fadeIn: {
@@ -308,6 +313,32 @@ export default {
         trialGlow: {
           '0%, 100%': { boxShadow: '0 0 15px rgba(var(--color-accent-400), 0.06)' },
           '50%': { boxShadow: '0 0 30px rgba(var(--color-accent-400), 0.12)' },
+        },
+        jumpscareShake: {
+          '0%': { transform: 'translate(0, 0) rotate(0)' },
+          '10%': { transform: 'translate(-12px, 6px) rotate(-1deg)' },
+          '20%': { transform: 'translate(10px, -6px) rotate(1deg)' },
+          '30%': { transform: 'translate(-8px, 5px) rotate(-0.6deg)' },
+          '40%': { transform: 'translate(8px, -4px) rotate(0.6deg)' },
+          '50%': { transform: 'translate(-6px, 3px)' },
+          '60%': { transform: 'translate(6px, -3px)' },
+          '70%': { transform: 'translate(-3px, 2px)' },
+          '80%': { transform: 'translate(3px, -2px)' },
+          '90%': { transform: 'translate(-1px, 1px)' },
+          '100%': { transform: 'translate(0, 0)' },
+        },
+        jumpscareFlash: {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+        webCrawl: {
+          '0%': { opacity: '0', transform: 'scale(0.6)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        ghostPop: {
+          '0%': { opacity: '0', transform: 'scale(0.3) translateY(24px)' },
+          '55%': { opacity: '1', transform: 'scale(1.1) translateY(-6px)' },
+          '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
         },
       },
       transitionTimingFunction: {

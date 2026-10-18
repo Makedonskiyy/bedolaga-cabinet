@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface BrokenGlassOverlayProps {
   onShare: () => void;
@@ -6,22 +6,93 @@ interface BrokenGlassOverlayProps {
   isLoading?: boolean;
 }
 
+/** Один угол паутины: концентрические дуги + радиальные нити, тянется из угла экрана. */
+function CobwebCorner({
+  corner,
+  delay = 0,
+}: {
+  corner: 'tl' | 'tr' | 'bl' | 'br';
+  delay?: number;
+}) {
+  const flip = corner === 'tr' || corner === 'br' ? 'scale-x-[-1]' : '';
+  const flipY = corner === 'bl' || corner === 'br' ? 'scale-y-[-1]' : '';
+  const position =
+    corner === 'tl'
+      ? 'left-0 top-0'
+      : corner === 'tr'
+        ? 'right-0 top-0'
+        : corner === 'bl'
+          ? 'left-0 bottom-0'
+          : 'right-0 bottom-0';
+
+  // Внешний div отвечает за появление (opacity+scale keyframe), внутренний svg —
+  // за отражение в нужный угол (статичный transform), чтобы два разных
+  // transform-свойства не перезаписывали друг друга.
+  return (
+    <div
+      className={`pointer-events-none absolute ${position} h-40 w-40 sm:h-56 sm:w-56 animate-web-crawl opacity-0`}
+      style={{ animationDelay: `${delay}ms`, animationFillMode: 'forwards' }}
+    >
+      <svg className={`h-full w-full ${flip} ${flipY}`} viewBox="0 0 200 200" fill="none">
+        {/* радиальные нити */}
+        <path
+          d="M0,0 L200,0 M0,0 L170,70 M0,0 L130,130 M0,0 L70,170 M0,0 L0,200"
+          stroke="#e4e4e7"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        {/* концентрические дуги паутины */}
+        <path d="M38,0 Q38,38 0,38" stroke="#e4e4e7" strokeWidth="1" fill="none" />
+        <path d="M78,0 Q78,78 0,78" stroke="#e4e4e7" strokeWidth="1" fill="none" />
+        <path d="M122,0 Q122,122 0,122" stroke="#e4e4e7" strokeWidth="1" fill="none" />
+        <path d="M165,0 Q165,165 0,165" stroke="#e4e4e7" strokeWidth="1" fill="none" />
+        {/* паучок на нити */}
+        <circle cx="46" cy="46" r="3" fill="#18181b" stroke="#e4e4e7" strokeWidth="0.8" />
+      </svg>
+    </div>
+  );
+}
+
 export function BrokenGlassOverlay({
   onShare,
   frozenMinutes = 0,
   isLoading = false,
 }: BrokenGlassOverlayProps) {
+  const [showFlash, setShowFlash] = useState(true);
+
   useEffect(() => {
     if (window.navigator?.vibrate) {
-      window.navigator.vibrate([100, 50, 200]);
+      window.navigator.vibrate([60, 40, 120, 40, 200]);
     }
+    const t = setTimeout(() => setShowFlash(false), 650);
+    return () => clearTimeout(t);
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-zinc-950 p-6 select-none animate-in fade-in duration-300">
-      {/* Тонкие линии разбитого стекла и паутины (без ядовитого свечения) */}
+    <div className="fixed inset-0 z-50 overflow-hidden bg-zinc-950 select-none animate-jumpscare-shake">
+      {/* Вспышка-скример в момент появления экрана */}
+      {showFlash && (
+        <div
+          className="pointer-events-none absolute inset-0 z-30 animate-jumpscare-flash"
+          style={{
+            background:
+              'radial-gradient(circle at 50% 42%, rgba(255,255,255,0.9) 0%, rgba(249,115,22,0.55) 35%, rgba(9,9,11,0.95) 100%)',
+          }}
+        />
+      )}
+
+      {/* Виньетка-затемнение по краям */}
+      <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.75)_100%)]" />
+
+      {/* Паутина во всех четырёх углах */}
+      <CobwebCorner corner="tl" delay={150} />
+      <CobwebCorner corner="tr" delay={280} />
+      <CobwebCorner corner="bl" delay={400} />
+      <CobwebCorner corner="br" delay={520} />
+
+      {/* Трещины «разбитого экрана» */}
       <svg
-        className="pointer-events-none absolute inset-0 h-full w-full opacity-25"
+        className="pointer-events-none absolute inset-0 z-10 h-full w-full opacity-30"
         viewBox="0 0 1000 1000"
         preserveAspectRatio="none"
       >
@@ -39,42 +110,33 @@ export function BrokenGlassOverlay({
           strokeDasharray="4 6"
           fill="none"
         />
-        {/* Паутина в углах */}
-        <path
-          d="M0,0 L180,0 M0,0 L160,70 M0,0 L120,120 M0,0 L70,160 M0,0 L0,180 M40,0 Q40,40 0,40 M80,0 Q80,80 0,80 M130,0 Q130,130 0,130 M180,0 Q180,180 0,180"
-          stroke="#ffffff"
-          strokeWidth="1.5"
-          fill="none"
-          opacity="0.4"
-        />
-        <path
-          d="M1000,0 L820,0 M1000,0 L840,70 M1000,0 L880,120 M1000,0 L930,160 M1000,0 L1000,180 M960,0 Q960,40 1000,40 M920,0 Q920,80 1000,80 M870,0 Q870,130 1000,130 M820,0 Q820,180 1000,180"
-          stroke="#ffffff"
-          strokeWidth="1.5"
-          fill="none"
-          opacity="0.4"
-        />
       </svg>
 
-      {/* Экран заколдования строго по Figma (screen trick.tsx) */}
-      <div className="relative z-10 mx-auto flex w-full max-w-lg flex-col items-center text-center">
-        <h2 className="mb-4 text-4xl sm:text-6xl font-bold text-white tracking-tight">
-          Бу! Тебя заколдовали!
-        </h2>
+      <div className="relative z-20 flex h-full w-full items-center justify-center p-6">
+        <div className="relative mx-auto flex w-full max-w-lg flex-col items-center text-center">
+          {/* Призрак, вылетающий навстречу */}
+          <div className="mb-4 h-16 w-16 animate-ghost-pop opacity-0 sm:h-20 sm:w-20 [animation-delay:150ms] [animation-fill-mode:forwards]">
+            <img src="/halloween/ghost.svg" alt="" className="h-full w-full animate-float" />
+          </div>
 
-        <p className="mb-10 text-base sm:text-2xl font-medium leading-relaxed text-white/80 max-w-md">
-          {frozenMinutes > 0
-            ? `Привидение украло твои ${frozenMinutes} минут! Поделись ссылкой на ивент с другом, чтобы вернуть их и получить бонус x2`
-            : 'Привидение украло твои минуты! Поделись ссылкой на ивент с другом, чтобы вернуть их и получить бонус x2'}
-        </p>
+          <h2 className="mb-4 text-4xl sm:text-6xl font-bold text-white tracking-tight">
+            Бу! Тебя заколдовали!
+          </h2>
 
-        <button
-          onClick={onShare}
-          disabled={isLoading}
-          className="w-full max-w-xs sm:max-w-sm rounded-full bg-orange-500 py-4 px-8 text-xl font-bold text-orange-950 transition-all hover:bg-orange-400 active:scale-95 disabled:opacity-50"
-        >
-          {isLoading ? 'Возвращаем...' : 'Поделиться'}
-        </button>
+          <p className="mb-10 text-base sm:text-2xl font-medium leading-relaxed text-white/80 max-w-md">
+            {frozenMinutes > 0
+              ? `Привидение украло твои ${frozenMinutes} минут! Поделись ссылкой на ивент с другом, чтобы вернуть их и получить бонус x2`
+              : 'Привидение украло твои минуты! Поделись ссылкой на ивент с другом, чтобы вернуть их и получить бонус x2'}
+          </p>
+
+          <button
+            onClick={onShare}
+            disabled={isLoading}
+            className="w-full max-w-xs sm:max-w-sm rounded-full bg-orange-500 py-4 px-8 text-xl font-bold text-orange-950 transition-all hover:bg-orange-400 active:scale-95 disabled:opacity-50"
+          >
+            {isLoading ? 'Возвращаем...' : 'Поделиться'}
+          </button>
+        </div>
       </div>
     </div>
   );

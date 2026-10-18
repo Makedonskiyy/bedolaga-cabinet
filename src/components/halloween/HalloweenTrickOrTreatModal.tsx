@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { PiClockFill, PiLightningFill, PiTagFill } from 'react-icons/pi';
 import { XIcon } from '@/components/icons';
 import { usePlatform } from '@/platform';
 import {
@@ -106,31 +107,38 @@ export function HalloweenTrickOrTreatModal({
       )}
 
       {stage !== 'trick' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-200 select-none">
-          {/* Контейнер: Жидкое стекло (liquid glass) без свечения */}
-          <div className="relative mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-[28px] border border-white/10 bg-neutral-950/90 p-6 sm:p-8 backdrop-blur-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/85 p-4 backdrop-blur-md animate-fade-in-fast select-none">
+          {/* Контейнер: жидкое стекло без свечения */}
+          <div className="relative mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-[28px] border border-white/10 bg-neutral-950/90 p-6 sm:p-8 backdrop-blur-2xl animate-scale-in-bounce">
             {/* Кнопка закрыть */}
             <button
               onClick={handleClose}
-              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white"
+              className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white"
             >
               <XIcon className="h-5 w-5" />
             </button>
 
             {error && (
-              <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-center text-xs text-red-400">
+              <div className="relative z-10 mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-center text-xs text-red-400">
                 {error}
               </div>
             )}
 
-            {/* Stage 1: Intro (строго по Figma 1.tsx) */}
+            {/* Stage 1: Intro */}
             {stage === 'intro' && (
-              <div className="flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <div className="relative mb-5 flex h-20 w-20 items-center justify-center">
+                  <img
+                    src="/halloween/pumpkin-coin.svg"
+                    alt=""
+                    className="relative h-16 w-16 animate-float object-contain"
+                  />
+                </div>
                 <h2 className="mb-3 text-3xl sm:text-4xl font-bold text-white">
                   Сладость или гадость?
                 </h2>
                 <p className="mb-8 text-base sm:text-lg leading-relaxed text-white/80">
-                  Испытай удачу Хэллоуина. Открой один из трёх котлов и узнай, что приготовила
+                  Испытай удачу Хэллоуина. Открой одну из трёх тыкв и узнай, что приготовила
                   нечисть!
                 </p>
                 <button
@@ -142,58 +150,75 @@ export function HalloweenTrickOrTreatModal({
               </div>
             )}
 
-            {/* Stage 2: Pick Pumpkin (строго по Figma 2.tsx) */}
+            {/* Stage 2: Pick Pumpkin */}
             {stage === 'picking' && (
-              <div className="flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-col items-center text-center">
                 <h2 className="mb-2 text-3xl sm:text-4xl font-bold text-white">Выбери тыкву</h2>
                 <p className="mb-8 text-base sm:text-lg text-white/80">Только аккуратнее!</p>
 
-                <div className="mb-8 grid grid-cols-3 gap-3 w-full max-w-xs">
+                <div className="mb-6 grid grid-cols-3 gap-3 w-full max-w-xs">
                   {[1, 2, 3].map((num) => (
                     <button
                       key={num}
                       onClick={() => handleSelectPumpkin(num)}
                       disabled={isLoading}
-                      className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-3 transition hover:bg-white/[0.08] active:scale-90 disabled:opacity-50"
+                      className="group relative flex flex-col items-center justify-center rounded-2xl border border-orange-500/20 bg-orange-500/[0.06] p-3 transition hover:border-orange-500/40 hover:bg-orange-500/[0.12] active:scale-90 disabled:opacity-40"
                     >
                       <img
                         src="/halloween/evil-pumpkin.svg"
                         alt={`Тыква ${num}`}
-                        className="h-16 w-16 object-contain"
+                        className="relative h-16 w-16 object-contain animate-float"
+                        style={{ animationDelay: `${num * 150}ms` }}
                       />
                     </button>
                   ))}
                 </div>
 
                 {isLoading && (
-                  <p className="animate-pulse text-sm text-orange-400">Открываем тыкву...</p>
+                  <p className="flex items-center gap-2 text-sm font-medium text-orange-400">
+                    <span className="h-2 w-2 animate-ping rounded-full bg-orange-500" />
+                    Открываем тыкву...
+                  </p>
                 )}
               </div>
             )}
 
-            {/* Stage 3: Treat / Тебе повезло (строго по Figma 3.tsx) */}
+            {/* Stage 3: Treat / Тебе повезло */}
             {stage === 'treat' && (
-              <div className="flex flex-col items-center text-center">
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <div className="relative mb-4 flex h-16 w-16 items-center justify-center">
+                  <img
+                    src="/halloween/pumpkin-coin.svg"
+                    alt=""
+                    className="relative h-14 w-14 object-contain"
+                  />
+                </div>
                 <h2 className="mb-2 text-3xl sm:text-4xl font-bold text-white">Тебе повезло!</h2>
                 <p className="mb-6 text-base sm:text-lg text-white/80">Варианты наград:</p>
 
-                {/* Список в стиле макета с оранжевыми точками */}
-                <div className="mb-8 flex flex-col gap-3.5 text-left w-full max-w-xs">
-                  <div className="flex items-center gap-3">
-                    <span className="h-3.5 w-3.5 shrink-0 rounded-full bg-orange-500" />
-                    <span className="text-base sm:text-lg font-medium text-white">
+                {/* Список возможных наград с иконками по типу */}
+                <div className="mb-8 flex flex-col gap-3 text-left w-full max-w-xs">
+                  <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500/15 text-orange-400">
+                      <PiClockFill className="h-5 w-5" />
+                    </span>
+                    <span className="text-sm sm:text-base font-medium text-white">
                       +60 минут к твоему балансу
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="h-3.5 w-3.5 shrink-0 rounded-full bg-orange-500" />
-                    <span className="text-base sm:text-lg font-medium text-white">
+                  <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500/15 text-orange-400">
+                      <PiLightningFill className="h-5 w-5" />
+                    </span>
+                    <span className="text-sm sm:text-base font-medium text-white">
                       Буст дохода в тапалке x2 на 1 час
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="h-3.5 w-3.5 shrink-0 rounded-full bg-orange-500" />
-                    <span className="text-base sm:text-lg font-medium text-white">
+                  <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500/15 text-orange-400">
+                      <PiTagFill className="h-5 w-5" />
+                    </span>
+                    <span className="text-sm sm:text-base font-medium text-white">
                       Промокод на скидку 25%
                     </span>
                   </div>
