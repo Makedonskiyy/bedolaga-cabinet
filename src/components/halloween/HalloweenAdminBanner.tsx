@@ -61,7 +61,7 @@ export function HalloweenAdminBanner() {
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
               <img
-                src="/halloween/pumpkin-coin.svg"
+                src="/halloween/pumpkin-coin-white.svg"
                 alt="Хэллоуин"
                 className="h-8 w-8 object-contain"
               />

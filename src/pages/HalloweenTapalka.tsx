@@ -78,13 +78,13 @@ export default function HalloweenTapalka() {
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+      const totalMinutes = hours * 60 + mins;
 
-      setEventCountdown(`${days} дней ${hours * 60 + mins} минут ${secs} сек`);
+      setEventCountdown(`${days}д ${totalMinutes}мин`);
     };
 
     updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
+    const interval = setInterval(updateCountdown, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -265,20 +265,24 @@ export default function HalloweenTapalka() {
         />
       )}
 
-      {/* Верхний блок: Выравнивание строго СЛЕВА как в Figma */}
-      <div className="relative z-10 w-full px-4 text-left">
+      {/* Верхний блок: Выравнивание строго ПО ЦЕНТРУ */}
+      <div className="relative z-10 w-full px-4 text-center flex flex-col items-center">
         <div className="text-2xl sm:text-3xl font-bold text-white">Заработано:</div>
 
-        <div className="mt-1.5 flex items-center gap-2">
+        <div className="mt-2 flex items-center justify-center gap-2.5">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center">
-            <img src="/halloween/pumpkin-coin.svg" alt="Тыква" className="h-9 w-9 object-contain" />
+            <img
+              src="/halloween/pumpkin-coin-white.svg"
+              alt="Тыква"
+              className="h-9 w-9 object-contain"
+            />
           </div>
           <div className="text-3xl sm:text-4xl font-bold text-orange-500">
             {state ? state.available_minutes.toLocaleString() : '...'} минут
           </div>
         </div>
 
-        <p className="mt-2 text-sm sm:text-base font-normal leading-relaxed text-white/50">
+        <p className="mt-2 text-sm sm:text-base font-normal leading-relaxed text-white/50 max-w-md mx-auto">
           Хэллуинский инвент — мы запустили уникальное событие, с помщоью которго вы можете
           заработать минуты ВПН, выбить промоклды, скидки. Просто тапая тыкву
         </p>
@@ -286,33 +290,44 @@ export default function HalloweenTapalka() {
 
       {/* Сетка 4 карточек статистики: Жидкое стекло (liquid glass) */}
       <div className="relative z-10 mt-5 grid w-full grid-cols-2 gap-3 px-4">
-        {/* Карточка 1: Закончится через (жидкое стекло с теплым оттенком) */}
+        {/* Карточка 1: Закончится через (формат 16д 612мин без секунд) */}
         <div className="flex min-h-[96px] flex-col justify-between rounded-[20px] border border-orange-500/20 bg-orange-500/10 p-3.5 backdrop-blur-xl text-left">
           <span className="text-sm font-normal text-white/50">Закончится через:</span>
           <div className="font-bold text-lg sm:text-xl text-orange-500 leading-tight">
-            {eventCountdown || '8 дней 27 минут 32 сек'}
+            {eventCountdown || '16д 612мин'}
           </div>
         </div>
 
-        {/* Карточка 2: Ваш уровень (белая иконка призрака + аккуратная кнопка) */}
-        <div className="flex min-h-[96px] flex-col justify-between rounded-[20px] border border-white/10 bg-neutral-900/60 p-3.5 backdrop-blur-xl text-left">
+        {/* Карточка 2: Ваш уровень (желтый контейнер, желтый призрак, желтый текст и кнопка улучшения) */}
+        <div className="flex min-h-[96px] flex-col justify-between rounded-[20px] border border-amber-400/30 bg-amber-400/10 p-3.5 backdrop-blur-xl text-left">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-normal text-white/50">Ваш уровень</span>
-            {state?.upgrade_cost !== null && state?.upgrade_cost !== undefined && (
+            <span className="text-sm font-normal text-amber-200/70">Ваш уровень</span>
+            {state?.upgrade_cost !== null && state?.upgrade_cost !== undefined ? (
               <button
                 onClick={handleUpgrade}
                 disabled={
                   upgradeLoading || (state?.available_minutes || 0) < (state?.upgrade_cost || 0)
                 }
-                className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-stone-900 transition hover:bg-orange-400 active:scale-95 disabled:opacity-40"
+                className="flex flex-col items-center justify-center rounded-2xl bg-amber-400 px-3 py-1 text-center transition hover:bg-amber-300 active:scale-95 disabled:opacity-40 cursor-pointer shadow-sm"
               >
-                {upgradeLoading ? '...' : `за ${state.upgrade_cost} минут`}
+                <span className="text-3xs font-extrabold uppercase tracking-tight text-stone-950">
+                  Улучшить
+                </span>
+                <span className="text-2xs font-bold text-stone-900 leading-none">
+                  за {state.upgrade_cost} минут
+                </span>
               </button>
+            ) : (
+              <span className="text-2xs font-semibold text-amber-400/60">Макс. уровень</span>
             )}
           </div>
           <div className="mt-1 flex items-center gap-2">
-            <img src="/halloween/ghost.svg" alt="Уровень" className="h-5 w-5 brightness-200" />
-            <span className="text-lg sm:text-xl font-bold text-white">
+            <img
+              src="/halloween/ghost-yellow.svg"
+              alt="Уровень"
+              className="h-5 w-5 object-contain"
+            />
+            <span className="text-lg sm:text-xl font-bold text-amber-400">
               {state?.level_name || 'Первый'}
             </span>
           </div>

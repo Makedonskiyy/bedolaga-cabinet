@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XIcon } from '@/components/icons';
 import { usePlatform } from '@/platform';
 import {
@@ -27,7 +27,22 @@ export function HalloweenTrickOrTreatModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (isOpen) {
+      setStage('intro');
+      setResult(null);
+      setError(null);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const handleClose = () => {
+    setStage('intro');
+    setResult(null);
+    setError(null);
+    onClose();
+  };
 
   const handleStartPick = () => {
     setError(null);
@@ -96,7 +111,7 @@ export function HalloweenTrickOrTreatModal({
           <div className="relative mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-[28px] border border-white/10 bg-neutral-950/90 p-6 sm:p-8 backdrop-blur-2xl">
             {/* Кнопка закрыть */}
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white"
             >
               <XIcon className="h-5 w-5" />
@@ -195,7 +210,7 @@ export function HalloweenTrickOrTreatModal({
                 )}
 
                 <button
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="w-full max-w-xs rounded-full bg-orange-500 py-3.5 px-8 text-lg font-bold text-orange-950 transition hover:bg-orange-400 active:scale-95"
                 >
                   Выбрать
