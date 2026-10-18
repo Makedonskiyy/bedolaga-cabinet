@@ -19,8 +19,6 @@ import TrialOfferCard from '../components/dashboard/TrialOfferCard';
 import ReminderCards from '../components/dashboard/ReminderCards';
 import StatsGrid from '../components/dashboard/StatsGrid';
 import DiscountPromoBanner from '../components/dashboard/DiscountPromoBanner';
-import HalloweenPromoBanner from '../components/dashboard/HalloweenPromoBanner';
-import { halloweenApi } from '../api/halloween';
 import { giftApi } from '../api/gift';
 import { promoApi } from '../api/promo';
 import PendingGiftCard from '../components/dashboard/PendingGiftCard';
@@ -54,13 +52,6 @@ export default function Dashboard() {
     queryFn: balanceApi.getBalance,
     staleTime: API.BALANCE_STALE_TIME_MS,
     refetchOnMount: 'always',
-  });
-
-  // Halloween event config — пока ивент активен, баннер скидки заменяется на баннер ивента
-  const { data: halloweenConfig } = useQuery({
-    queryKey: ['halloween-config'],
-    queryFn: halloweenApi.getConfig,
-    staleTime: 1000 * 30,
   });
 
   // Multi-tariff: check if user has multiple subscriptions
@@ -452,8 +443,8 @@ export default function Dashboard() {
         refLoading={refLoading}
       />
 
-      {/* Discount Promo Banner — на время Хэллоуина заменяется баннером ивента */}
-      {halloweenConfig?.is_enabled ? <HalloweenPromoBanner /> : <DiscountPromoBanner />}
+      {/* Discount Promo Banner */}
+      <DiscountPromoBanner />
 
       {/* Fortune Wheel Banner */}
       {wheelConfig?.is_enabled && (
