@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router';
 import { useHaptic } from '@/platform';
+import { PumpkinIcon } from '@/components/icons';
 
 export function HalloweenFloatingButton() {
   const location = useLocation();
@@ -20,7 +21,7 @@ export function HalloweenFloatingButton() {
         right: 'max(16px, env(safe-area-inset-right, 16px))',
       }}
     >
-      <img src="/halloween/pumpkin-coin.svg" alt="Хэллоуин" className="h-6 w-6 object-contain" />
+      <PumpkinIcon className="h-6 w-6 shrink-0 text-orange-500" />
       <div className="flex flex-col text-left">
         <span className="text-xs font-bold text-white">Хэллоуин</span>
         <span className="text-2xs text-white/50">Тапай тыкву</span>

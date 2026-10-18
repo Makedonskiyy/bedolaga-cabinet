@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { GhostIcon } from '@/components/icons';
 
 interface BrokenGlassOverlayProps {
   onShare: () => void;
@@ -116,7 +117,7 @@ export function BrokenGlassOverlay({
         <div className="relative mx-auto flex w-full max-w-lg flex-col items-center text-center">
           {/* Призрак, вылетающий навстречу */}
           <div className="mb-4 h-16 w-16 animate-ghost-pop opacity-0 sm:h-20 sm:w-20 [animation-delay:150ms] [animation-fill-mode:forwards]">
-            <img src="/halloween/ghost.svg" alt="" className="h-full w-full animate-float" />
+            <GhostIcon className="h-full w-full animate-float text-white" />
           </div>
 
           <h2 className="mb-4 text-4xl sm:text-6xl font-bold text-white tracking-tight">

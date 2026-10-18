@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { halloweenApi } from '@/api/halloween';
 import { useHaptic } from '@/platform';
+import { PumpkinIcon } from '@/components/icons';
 import { HalloweenAdminModal } from './HalloweenAdminModal';
 
 export function HalloweenAdminBanner() {
@@ -60,11 +61,7 @@ export function HalloweenAdminBanner() {
           {/* Левая часть: иконка, статус и описание */}
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-              <img
-                src="/halloween/pumpkin-coin-white.svg"
-                alt="Хэллоуин"
-                className="h-8 w-8 object-contain"
-              />
+              <PumpkinIcon className="h-8 w-8 text-white" />
             </div>
 
             <div className="text-left">

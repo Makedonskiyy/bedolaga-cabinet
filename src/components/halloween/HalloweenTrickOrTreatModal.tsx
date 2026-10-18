@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PiClockFill, PiLightningFill, PiTagFill } from 'react-icons/pi';
-import { XIcon } from '@/components/icons';
+import { XIcon, PumpkinIcon, EvilPumpkinIcon } from '@/components/icons';
 import { usePlatform } from '@/platform';
 import {
   halloweenApi,
@@ -128,11 +128,7 @@ export function HalloweenTrickOrTreatModal({
             {stage === 'intro' && (
               <div className="relative z-10 flex flex-col items-center text-center">
                 <div className="relative mb-5 flex h-20 w-20 items-center justify-center">
-                  <img
-                    src="/halloween/pumpkin-coin.svg"
-                    alt=""
-                    className="relative h-16 w-16 animate-float object-contain"
-                  />
+                  <PumpkinIcon className="relative h-16 w-16 animate-float text-orange-500" />
                 </div>
                 <h2 className="mb-3 text-3xl sm:text-4xl font-bold text-white">
                   Сладость или гадость?
@@ -164,10 +160,8 @@ export function HalloweenTrickOrTreatModal({
                       disabled={isLoading}
                       className="group relative flex flex-col items-center justify-center rounded-2xl border border-orange-500/20 bg-orange-500/[0.06] p-3 transition hover:border-orange-500/40 hover:bg-orange-500/[0.12] active:scale-90 disabled:opacity-40"
                     >
-                      <img
-                        src="/halloween/evil-pumpkin.svg"
-                        alt={`Тыква ${num}`}
-                        className="relative h-16 w-16 object-contain animate-float"
+                      <EvilPumpkinIcon
+                        className="relative h-16 w-16 animate-float text-orange-500"
                         style={{ animationDelay: `${num * 150}ms` }}
                       />
                     </button>
@@ -187,11 +181,7 @@ export function HalloweenTrickOrTreatModal({
             {stage === 'treat' && (
               <div className="relative z-10 flex flex-col items-center text-center">
                 <div className="relative mb-4 flex h-16 w-16 items-center justify-center">
-                  <img
-                    src="/halloween/pumpkin-coin.svg"
-                    alt=""
-                    className="relative h-14 w-14 object-contain"
-                  />
+                  <PumpkinIcon className="relative h-14 w-14 text-orange-500" />
                 </div>
                 <h2 className="mb-2 text-3xl sm:text-4xl font-bold text-white">Тебе повезло!</h2>
                 <p className="mb-6 text-base sm:text-lg text-white/80">Варианты наград:</p>

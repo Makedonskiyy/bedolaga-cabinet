@@ -8,7 +8,7 @@ import { HalloweenTrickOrTreatModal } from '@/components/halloween/HalloweenTric
 import { HalloweenClaimModal } from '@/components/halloween/HalloweenClaimModal';
 import { HalloweenAdminModal } from '@/components/halloween/HalloweenAdminModal';
 import { BrokenGlassOverlay } from '@/components/halloween/BrokenGlassOverlay';
-import { ShieldIcon } from '@/components/icons';
+import { ShieldIcon, PumpkinIcon, GhostIcon } from '@/components/icons';
 
 interface FloatingTap {
   id: number;
@@ -243,7 +243,7 @@ export default function HalloweenTapalka() {
         <div className="relative z-10 mb-3 flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-neutral-900/70 px-4 py-3 backdrop-blur-xl">
           <div className="flex min-w-0 items-center gap-3 text-left">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
-              <ShieldIcon className="h-4.5 w-4.5 text-orange-400" />
+              <ShieldIcon className="h-5 w-5 text-orange-400" />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5">
@@ -293,7 +293,7 @@ export default function HalloweenTapalka() {
 
         <div className="mt-2 flex items-center justify-center gap-2.5">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center">
-            <img src="/halloween/pumpkin-coin.svg" alt="Тыква" className="h-9 w-9 object-contain" />
+            <PumpkinIcon className="h-9 w-9 text-orange-500" />
           </div>
           <div className="text-3xl sm:text-4xl font-bold text-orange-500">
             {state ? state.available_minutes.toLocaleString() : '...'} минут
@@ -332,11 +332,7 @@ export default function HalloweenTapalka() {
           <span className="text-sm font-normal text-amber-200/70">Ваш уровень</span>
 
           <div className="flex min-w-0 items-center gap-1.5">
-            <img
-              src="/halloween/ghost-yellow.svg"
-              alt=""
-              className="h-5 w-5 shrink-0 object-contain"
-            />
+            <GhostIcon className="h-5 w-5 shrink-0 text-amber-400" />
             <span className="truncate text-lg sm:text-xl font-bold text-amber-400">
               {state?.level_name || 'Первый'}
             </span>
@@ -390,11 +386,7 @@ export default function HalloweenTapalka() {
           onClick={() => setIsTotOpen(true)}
           className="flex min-h-[52px] flex-1 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-neutral-900/70 py-2.5 px-2.5 text-center text-xs sm:text-sm font-bold leading-snug text-white backdrop-blur-xl transition hover:bg-neutral-800/80 active:scale-95"
         >
-          <img
-            src="/halloween/pumpkin-coin.svg"
-            alt=""
-            className="h-4 w-4 shrink-0 object-contain"
-          />
+          <PumpkinIcon className="h-4 w-4 shrink-0 text-orange-500" />
           <span>Сладость или гадость</span>
           {state?.can_play_trick_or_treat && (
             <span className="h-2 w-2 shrink-0 rounded-full bg-orange-500" />
