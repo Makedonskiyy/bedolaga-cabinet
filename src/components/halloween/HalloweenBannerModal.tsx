@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
+import { useTelegramSDK } from '@/hooks/useTelegramSDK';
 import { XIcon } from '@/components/icons';
 
 const BANNER_STORAGE_KEY = 'halloween_banner_dismissed_until';
@@ -8,6 +9,10 @@ export function HalloweenBannerModal() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { safeAreaInset, contentSafeAreaInset } = useTelegramSDK();
+
+  const topInset = Math.max(safeAreaInset?.top || 0, contentSafeAreaInset?.top || 0, 16);
+  const rightInset = Math.max(safeAreaInset?.right || 0, contentSafeAreaInset?.right || 0, 16);
 
   useEffect(() => {
     // Не показывать баннер, если пользователь уже на странице ивента
@@ -63,10 +68,14 @@ export function HalloweenBannerModal() {
       {/* Мягкий градиент для читаемости текста внизу */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-black/20 pointer-events-none" />
 
-      {/* Кнопка закрытия в правом верхнем углу (круглый жидкий бейдж) */}
+      {/* Кнопка закрытия в правом верхнем углу (адаптивная с учетом вырезов экрана) */}
       <button
         onClick={handleClose}
-        className="absolute right-4 top-4 sm:right-6 sm:top-6 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 transition-transform hover:bg-black/70 active:scale-90"
+        style={{
+          top: `max(${topInset + 8}px, env(safe-area-inset-top, 16px))`,
+          right: `max(${rightInset + 8}px, env(safe-area-inset-right, 16px))`,
+        }}
+        className="absolute z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 transition-transform hover:bg-black/70 active:scale-90"
         aria-label="Закрыть"
       >
         <XIcon className="h-6 w-6" />

@@ -35,7 +35,7 @@ export default function HalloweenTapalka() {
     staleTime: 1000 * 30,
   });
 
-  const canAccess = Boolean(config?.is_enabled || effectiveIsAdmin);
+  const canAccess = Boolean(effectiveIsAdmin || (config?.is_enabled ?? true));
 
   // Состояние с бэкенда
   const { data: serverState, refetch } = useQuery({
@@ -235,8 +235,10 @@ export default function HalloweenTapalka() {
 
   return (
     <div className="relative mx-auto flex min-h-[92vh] max-w-lg flex-col items-center justify-between pb-24 pt-3 select-none">
-      {/* Мягкий фоновый градиент сверху как в Figma */}
-      <div className="pointer-events-none absolute left-0 right-0 top-0 h-96 bg-gradient-to-b from-orange-500/20 via-orange-500/5 to-transparent" />
+      {/* Адаптивный фоновый градиент на весь экран */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[500px] w-full max-w-4xl rounded-full bg-gradient-to-b from-orange-500/20 via-orange-500/5 to-transparent blur-3xl" />
+      </div>
 
       {/* Панель администратора (жидкое стекло без свечения) */}
       {effectiveIsAdmin && (

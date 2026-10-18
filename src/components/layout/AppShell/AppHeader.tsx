@@ -43,6 +43,7 @@ import {
   SunIcon,
   MoonIcon,
   SearchIcon,
+  PumpkinIcon,
 } from './icons';
 
 const FALLBACK_NAME = import.meta.env.VITE_APP_NAME || 'Cabinet';
@@ -65,6 +66,7 @@ interface AppHeaderProps {
   hasContests?: boolean;
   hasPolls?: boolean;
   giftEnabled?: boolean;
+  canAccessHalloween?: boolean;
 }
 
 export function AppHeader({
@@ -81,6 +83,7 @@ export function AppHeader({
   hasContests,
   hasPolls,
   giftEnabled,
+  canAccessHalloween,
 }: AppHeaderProps) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -152,6 +155,7 @@ export function AppHeader({
   const navItems = [
     { path: '/', label: t('nav.dashboard'), icon: HomeIcon },
     { path: '/subscriptions', label: t('nav.subscription'), icon: SubscriptionIcon },
+    ...(canAccessHalloween ? [{ path: '/halloween', label: 'Хэллоуин', icon: PumpkinIcon }] : []),
     { path: '/servers', label: t('nav.servers', 'Личные серверы'), icon: ServerIcon },
     { path: '/balance', label: t('nav.balance'), icon: WalletIcon },
     ...(referralEnabled ? [{ path: '/referral', label: t('nav.referral'), icon: UsersIcon }] : []),

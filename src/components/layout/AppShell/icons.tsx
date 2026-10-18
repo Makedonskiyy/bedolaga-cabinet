@@ -23,4 +23,5 @@ export {
   DownloadIcon,
   PaletteIcon,
   ServerIcon,
+  PumpkinIcon,
 } from '../../icons';
