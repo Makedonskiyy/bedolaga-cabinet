@@ -45,9 +45,10 @@ export function HalloweenAdminModal({ isOpen, onClose }: HalloweenAdminModalProp
       setReportStatus(data.message || 'Отчёт успешно отправлен в Telegram!');
       setTimeout(() => setReportStatus(null), 5000);
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
+      const anyErr = err as { response?: { data?: { detail?: string } }; message?: string };
       haptic.notification('error');
-      setReportStatus('Ошибка отправки: ' + (err?.response?.data?.detail || err.message));
+      setReportStatus(`Ошибка отправки: ${anyErr?.response?.data?.detail || anyErr.message}`);
       setTimeout(() => setReportStatus(null), 6000);
     },
   });

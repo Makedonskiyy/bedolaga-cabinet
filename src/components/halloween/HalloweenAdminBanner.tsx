@@ -46,7 +46,7 @@ export function HalloweenAdminBanner() {
     onError: (err: unknown) => {
       const anyErr = err as { response?: { data?: { detail?: string } }; message?: string };
       haptic.notification('error');
-      setActionStatus('Ошибка: ' + (anyErr?.response?.data?.detail || anyErr.message));
+      setActionStatus(`Ошибка: ${anyErr?.response?.data?.detail || anyErr.message}`);
       setTimeout(() => setActionStatus(null), 5000);
     },
   });
