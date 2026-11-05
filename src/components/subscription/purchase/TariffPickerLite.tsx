@@ -1,3 +1,4 @@
+import { tariffTrafficLabel } from '../../../utils/tariffTrafficLabel';
 import { useTranslation } from 'react-i18next';
 
 import { ChevronRightIcon } from '@/components/icons';
@@ -25,6 +26,7 @@ export function TariffPickerLite({
   purchaseOptions,
   isTariffsMode,
   isMultiTariff,
+  subscriptionId,
   onSelectTariff,
   onSwitchTariff,
 }: TariffPickerGridProps) {
@@ -72,7 +74,7 @@ export function TariffPickerLite({
     const trafficLabel =
       tariff.tariff_type === 'whitelist' || tariff.is_whitelist
         ? t('subscription.whitelistTrafficLabel', 'Оплата за трафик')
-        : tariff.traffic_limit_label;
+        : tariffTrafficLabel(tariff.traffic_limit_gb, t);
     return `${trafficLabel}, ${devices}`;
   };
 
@@ -85,6 +87,7 @@ export function TariffPickerLite({
           purchaseOptions,
           isTariffsMode,
           isMultiTariff,
+          subscriptionId,
         });
         const price = priceOf(tariff);
         const isCurrent = action === 'extend' || action === 'current-daily';

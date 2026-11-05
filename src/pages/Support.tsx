@@ -1,3 +1,4 @@
+import { getLocalizedApiErrorMessage } from '../utils/api-error-display';
 import { uiLocale } from '@/utils/uiLocale';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,7 +12,7 @@ import { infoApi } from '../api/info';
 import { useAuthStore } from '../store/auth';
 import { logger } from '../utils/logger';
 import { checkRateLimit, getRateLimitResetTime, RATE_LIMIT_KEYS } from '../utils/rateLimit';
-import { getApiErrorMessage } from '../utils/api-error';
+
 import { isOpenTicketConflict } from '../utils/ticketErrors';
 import type { SupportConfig, TicketDetail } from '../types';
 import { Card } from '@/components/data-display/Card';
@@ -33,11 +34,22 @@ import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 const log = logger.createLogger('Support');
 
+const MEDIA_TYPES: Record<string, 'photo' | 'video'> = {
+  'image/jpeg': 'photo',
+  'image/png': 'photo',
+  'image/gif': 'photo',
+  'image/webp': 'photo',
+  'video/mp4': 'video',
+  'video/webm': 'video',
+  'video/quicktime': 'video',
+};
+
 // Media attachment state
 interface MediaAttachment {
   id: string;
   file: File;
   preview: string;
+  mediaType: 'photo' | 'video';
   uploading: boolean;
   fileId?: string;
   error?: string;
@@ -110,7 +122,11 @@ export default function Support() {
     } catch (err) {
       log.error('Failed to upload voice for new ticket', err);
       setFormError(
-        getApiErrorMessage(err, t('support.uploadFailed', 'Не удалось загрузить аудиозапись')),
+        getLocalizedApiErrorMessage(
+          err,
+          t('support.uploadFailed', 'Не удалось загрузить аудиозапись'),
+          t,
+        ),
       );
     } finally {
       setIsUploadingCreateVoice(false);
@@ -148,21 +164,21 @@ export default function Support() {
     file: File,
     setAttachments: React.Dispatch<React.SetStateAction<MediaAttachment[]>>,
   ) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) return;
+    const mediaType = MEDIA_TYPES[file.type];
+    if (!mediaType) return;
     if (file.size > 10 * 1024 * 1024) return;
 
-    const preview = URL.createObjectURL(file);
-    blobUrlsRef.current.add(preview);
+    const preview = mediaType === 'photo' ? URL.createObjectURL(file) : '';
+    if (preview) blobUrlsRef.current.add(preview);
     const id =
       typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
         ? crypto.randomUUID()
         : `att_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    const entry: MediaAttachment = { id, file, preview, uploading: true };
+    const entry: MediaAttachment = { id, file, preview, mediaType, uploading: true };
     setAttachments((prev) => (prev.length >= 10 ? prev : [...prev, entry]));
 
     try {
-      const result = await ticketsApi.uploadMedia(file, 'photo');
+      const result = await ticketsApi.uploadMedia(file, mediaType);
       setAttachments((prev) =>
         prev.map((a) => (a.id === id ? { ...a, uploading: false, fileId: result.file_id } : a)),
       );
@@ -177,26 +193,18 @@ export default function Support() {
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const ready = createAttachments.filter((a) => a.fileId) as Array<{ fileId: string }>;
-      let media:
-        | {
-            media_type: 'photo' | 'voice';
-            media_file_id: string;
-            media_items?: Array<{ type: 'photo'; file_id: string }>;
-          }
-        | undefined;
-      if (createVoiceFileId) {
-        media = {
-          media_type: 'voice',
-          media_file_id: createVoiceFileId,
-        };
-      } else if (ready.length > 0) {
-        media = {
-          media_type: 'photo',
-          media_file_id: ready[0].fileId,
-          media_items: ready.map((a) => ({ type: 'photo' as const, file_id: a.fileId })),
-        };
-      }
+      const ready = createAttachments.filter(
+        (a): a is MediaAttachment & { fileId: string } => !!a.fileId,
+      );
+      const media = createVoiceFileId
+        ? { media_type: 'voice' as const, media_file_id: createVoiceFileId }
+        : ready.length > 0
+          ? {
+              media_type: ready[0].mediaType,
+              media_file_id: ready[0].fileId,
+              media_items: ready.map((a) => ({ type: a.mediaType, file_id: a.fileId })),
+            }
+          : undefined;
       return ticketsApi.createTicket(newTitle, newMessage, media);
     },
     onSuccess: (ticket) => {
@@ -220,19 +228,21 @@ export default function Support() {
         queryClient.invalidateQueries({ queryKey: ['tickets'] });
         return;
       }
-      setFormError(getApiErrorMessage(error, t('support.errors.createFailed')));
+      setFormError(getLocalizedApiErrorMessage(error, t('support.errors.createFailed'), t));
     },
   });
 
   const replyMutation = useMutation({
     mutationFn: async () => {
-      const ready = replyAttachments.filter((a) => a.fileId) as Array<{ fileId: string }>;
+      const ready = replyAttachments.filter(
+        (a): a is MediaAttachment & { fileId: string } => !!a.fileId,
+      );
       const media =
         ready.length > 0
           ? {
-              media_type: 'photo',
+              media_type: ready[0].mediaType,
               media_file_id: ready[0].fileId,
-              media_items: ready.map((a) => ({ type: 'photo' as const, file_id: a.fileId })),
+              media_items: ready.map((a) => ({ type: a.mediaType, file_id: a.fileId })),
             }
           : undefined;
       await ticketsApi.addMessage(selectedTicket!.id, replyMessage, media);
@@ -247,7 +257,7 @@ export default function Support() {
       // Ответ в тикет молчал ровно так же: 403 (блокировка в поддержке) и 400
       // (тикет уже закрыт) выглядели как «кнопка не работает».
       log.error('Ticket reply failed', error);
-      setFormError(getApiErrorMessage(error, t('support.errors.replyFailed')));
+      setFormError(getLocalizedApiErrorMessage(error, t('support.errors.replyFailed'), t));
     },
   });
 
@@ -270,7 +280,7 @@ export default function Support() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     } catch (err) {
       log.error('Failed to send voice message', err);
-      setFormError(getApiErrorMessage(err, t('support.errors.replyFailed')));
+      setFormError(getLocalizedApiErrorMessage(err, t('support.errors.replyFailed'), t));
     } finally {
       setIsSendingVoice(false);
     }
@@ -369,7 +379,7 @@ export default function Support() {
             {att.preview ? (
               <img
                 src={att.preview}
-                alt="Preview"
+                alt={t('common.preview')}
                 loading="lazy"
                 className="h-16 w-16 rounded-lg border border-dark-700 object-cover"
               />
@@ -558,12 +568,12 @@ export default function Support() {
                   />
                 </div>
 
-                {/* Attachments for create */}
+                {/* Media attachments for create */}
                 <div>
                   <input
                     ref={createFileInputRef}
                     type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    accept={Object.keys(MEDIA_TYPES).join(',')}
                     multiple
                     className="hidden"
                     onChange={(e) => {
@@ -593,7 +603,7 @@ export default function Support() {
                         className="flex items-center gap-2 text-sm text-dark-400 transition-colors hover:text-dark-200 disabled:opacity-50"
                       >
                         <ImageIcon />
-                        {t('support.attachImage')}{' '}
+                        {t('support.attachMedia')}{' '}
                         {createAttachments.length > 0 && `(${createAttachments.length}/10)`}
                       </button>
                     )}
@@ -759,12 +769,12 @@ export default function Support() {
                       />
                     </div>
 
-                    {/* Image attachments for reply */}
+                    {/* Media attachments for reply */}
                     <div>
                       <input
                         ref={replyFileInputRef}
                         type="file"
-                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        accept={Object.keys(MEDIA_TYPES).join(',')}
                         multiple
                         className="hidden"
                         onChange={(e) => {
@@ -794,7 +804,7 @@ export default function Support() {
                             className="flex items-center gap-2 text-sm text-dark-400 transition-colors hover:text-dark-200 disabled:opacity-50"
                           >
                             <ImageIcon />
-                            {t('support.attachImage')}{' '}
+                            {t('support.attachMedia')}{' '}
                             {replyAttachments.length > 0 && `(${replyAttachments.length}/10)`}
                           </button>
                         )}

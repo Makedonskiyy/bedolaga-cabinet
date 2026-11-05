@@ -1,3 +1,4 @@
+import { tariffTrafficLabel } from '../../../utils/tariffTrafficLabel';
 import { useTranslation } from 'react-i18next';
 import { BestValueBadge, bestValueFrame } from '../BestValueBadge';
 import { useNavigate } from 'react-router';
@@ -38,6 +39,8 @@ export interface TariffPickerGridProps {
   purchaseOptions: PurchaseOptions | undefined;
   isTariffsMode: boolean;
   isMultiTariff: boolean;
+  subscriptionId?: number;
+  switchSelection?: boolean;
   onSelectTariff: (tariff: Tariff) => void;
   onSwitchTariff: (tariffId: number) => void;
 }
@@ -48,6 +51,8 @@ export function TariffPickerGrid({
   purchaseOptions,
   isTariffsMode,
   isMultiTariff,
+  subscriptionId,
+  switchSelection = false,
   onSelectTariff,
   onSwitchTariff,
 }: TariffPickerGridProps) {
@@ -139,6 +144,7 @@ export function TariffPickerGrid({
               purchaseOptions,
               isTariffsMode,
               isMultiTariff,
+              subscriptionId,
             });
 
             return (
@@ -181,7 +187,7 @@ export function TariffPickerGrid({
                     <span className="font-medium text-dark-200">
                       {tariff.tariff_type === 'whitelist' || tariff.is_whitelist
                         ? t('subscription.whitelistTrafficLabel', 'Оплата за трафик')
-                        : tariff.traffic_limit_label}
+                        : tariffTrafficLabel(tariff.traffic_limit_gb, t)}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -291,8 +297,17 @@ export function TariffPickerGrid({
                     <button
                       onClick={() => onSwitchTariff(tariff.id)}
                       className="btn-secondary flex-1 py-2 text-sm"
+                      aria-label={
+                        switchSelection
+                          ? `${tariff.name}: ${t('subscription.switchTariff.choose')}`
+                          : undefined
+                      }
                     >
-                      {t('subscription.switchTariff.switch')}
+                      {t(
+                        switchSelection
+                          ? 'subscription.switchTariff.choose'
+                          : 'subscription.switchTariff.switch',
+                      )}
                     </button>
                   ) : (
                     <button

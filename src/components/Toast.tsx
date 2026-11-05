@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   createContext,
   useContext,
@@ -45,6 +46,7 @@ export function useToast() {
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const timersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
 
@@ -107,7 +109,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           screen readers announce arriving toasts without stealing focus. */}
       <div
         role="region"
-        aria-label="Notifications"
+        aria-label={t('common.notifications')}
         aria-live="polite"
         className="pointer-events-none fixed left-4 right-4 top-[calc(1rem+env(safe-area-inset-top,0px))] z-[100] flex flex-col gap-3 sm:left-auto sm:right-[calc(1rem+env(safe-area-inset-right,0px))]"
       >
